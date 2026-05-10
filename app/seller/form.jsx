@@ -43,8 +43,7 @@ export default function SellerForm() {
         const currentSession = await getSession();
         await saveSession({ token: currentSession.token, user: response.data.user });
       }
-      setMessage("Application submitted. We will review your seller request shortly.");
-      router.replace("/profile");
+      router.replace("/seller/apply");
     } catch (error) {
       setMessage(error.message || "Unable to submit seller application");
     } finally {

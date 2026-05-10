@@ -13,6 +13,9 @@ export default function NotificationSettingsScreen() {
   const [pushEnabled, setPushEnabled] = React.useState(false);
   const [notifications, setNotifications] = React.useState([]);
   const [message, setMessage] = React.useState("");
+  const [notifDeals, setNotifDeals] = React.useState(true);
+  const [notifOrders, setNotifOrders] = React.useState(true);
+  const [notifAccount, setNotifAccount] = React.useState(true);
 
   React.useEffect(() => {
     let mounted = true;
@@ -108,7 +111,7 @@ export default function NotificationSettingsScreen() {
                   <Text style={styles.optionTitle}>Deals & Promotions</Text>
                   <Text style={styles.optionDescription}>Get notified about special offers</Text>
                 </View>
-                <Switch value={true} disabled />
+                <Switch value={notifDeals} onValueChange={setNotifDeals} trackColor={{ true: COLORS.primary }} />
               </View>
               <View style={styles.notificationOption}>
                 <Ionicons name="cube" size={20} color={COLORS.primary} />
@@ -116,7 +119,7 @@ export default function NotificationSettingsScreen() {
                   <Text style={styles.optionTitle}>Order Updates</Text>
                   <Text style={styles.optionDescription}>Track your shipments</Text>
                 </View>
-                <Switch value={true} disabled />
+                <Switch value={notifOrders} onValueChange={setNotifOrders} trackColor={{ true: COLORS.primary }} />
               </View>
               <View style={styles.notificationOption}>
                 <Ionicons name="person" size={20} color={COLORS.primary} />
@@ -124,7 +127,7 @@ export default function NotificationSettingsScreen() {
                   <Text style={styles.optionTitle}>Account Activity</Text>
                   <Text style={styles.optionDescription}>Security and login alerts</Text>
                 </View>
-                <Switch value={true} disabled />
+                <Switch value={notifAccount} onValueChange={setNotifAccount} trackColor={{ true: COLORS.primary }} />
               </View>
             </View>
 

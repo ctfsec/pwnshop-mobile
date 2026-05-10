@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../../constants/colors";
-import { getAdminSellers, updateAdminSeller } from "../../../api/admin";
+import { getAdminSellers, updateAdminSeller, updateAdminSellerApplication } from "../../../api/admin";
 
 function money(v) { return `₦${Number(v || 0).toLocaleString()}`; }
 
@@ -33,6 +33,20 @@ export default function AdminSellersScreen() {
       setMessage(e.message || "Action failed");
     } finally {
       setBusy((b) => ({ ...b, [sellerId]: false }));
+    }
+  }
+
+  async function actApplication(appId, status, msg) {
+    setBusy((b) => ({ ...b, [appId]: true }));
+    setMessage("");
+    try {
+      await updateAdminSellerApplication(appId, { status });
+      await load();
+      setMessage(msg);
+    } catch (e) {
+      setMessage(e.message || "Action failed");
+    } finally {
+      setBusy((b) => ({ ...b, [appId]: false }));
     }
   }
 
@@ -143,6 +157,24 @@ export default function AdminSellersScreen() {
           <Text style={styles.meta}>{app.email}</Text>
           <Text style={styles.meta}>Status: <Text style={styles.bold}>{app.status}</Text></Text>
           {app.reason ? <Text style={styles.meta}>Reason: {app.reason}</Text> : null}
+          {app.status === "pending" && (
+            <View style={styles.btnRow}>
+              <TouchableOpacity
+                onPress={() => actApplication(app.id, "approved", `${app.storeName || app.email} approved`)}
+                style={styles.approveBtn}
+                disabled={busy[app.id]}
+              >
+                {busy[app.id] ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.btnText}>Approve</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => actApplication(app.id, "rejected", `${app.storeName || app.email} rejected`)}
+                style={styles.rejectBtn}
+                disabled={busy[app.id]}
+              >
+                <Text style={styles.btnText}>Reject</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       ))}
     </ScrollView>

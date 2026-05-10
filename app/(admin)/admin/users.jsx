@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../../constants/colors";
 import { getAdminUsers, updateAdminUser } from "../../../api/admin";
+import { getSession, saveSession } from "../../../storage/insecure";
 
 const ROLES = ["buyer", "seller", "admin"];
 
@@ -31,6 +32,22 @@ export default function AdminUsersScreen() {
       await updateAdminUser(userId, payload);
       await load();
       setMessage(successMsg);
+
+      // If the changed user is the currently logged-in user, sync the local session
+      // so the tab bar reflects the new role/banned state immediately on next focus.
+      const { user: sessionUser, token } = await getSession();
+      if (sessionUser && sessionUser.id === userId) {
+        const sessionUpdates = {};
+        if ("role" in payload) {
+          sessionUpdates.role = payload.role;
+          if (payload.role === "seller") sessionUpdates.sellerEnrollmentStatus = "approved";
+          if (payload.role === "buyer") sessionUpdates.sellerEnrollmentStatus = "unapproved";
+        }
+        if ("banned" in payload) sessionUpdates.banned = payload.banned;
+        if (Object.keys(sessionUpdates).length > 0) {
+          await saveSession({ token, user: { ...sessionUser, ...sessionUpdates } });
+        }
+      }
     } catch (e) {
       setMessage(e.message || "Action failed");
     } finally {

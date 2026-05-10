@@ -47,6 +47,21 @@ export default function SellerWalletScreen() {
   }, []);
 
   async function handleWithdraw() {
+    const acctDigits = accountNumber.replace(/\D/g, "");
+    if (acctDigits.length < 10) {
+      setMessage("Enter a valid 10-digit VulnBank account number");
+      return;
+    }
+    if (!amount || Number(amount) <= 0) {
+      setMessage("Enter a valid amount greater than zero");
+      return;
+    }
+    const available = Number(wallet?.available || 0);
+    if (Number(amount) > available) {
+      setMessage(`Amount exceeds available balance of ${money(available)}`);
+      return;
+    }
+
     setMessage("");
     setWithdrawing(true);
     try {

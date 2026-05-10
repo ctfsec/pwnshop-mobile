@@ -107,3 +107,10 @@ export function broadcastAdminNotification(payload) {
 export function updateAdminProduct(id, payload) {
   return request(`/api/admin/products/${id}`, { method: "PATCH", body: payload });
 }
+
+export function updateAdminSellerApplication(id, payload) {
+  return request(`/api/admin/seller-applications/${id}`, {
+    method: "PATCH",
+    body: payload,
+  });
+}

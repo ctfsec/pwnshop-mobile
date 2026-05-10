@@ -7,6 +7,7 @@ import { getProducts, searchProducts } from "../../api/products";
 import { addToWishlist } from "../../api/wishlist";
 import { COLORS } from "../../constants/colors";
 import { MEDIA } from "../../constants/media";
+import { CONFIG } from "../../api/config";
 
 const SLUG_TO_CATEGORY = {
   "browse-all": null,
@@ -147,8 +148,19 @@ export default function CategoryScreen() {
                 p16: MEDIA.categoryXiomi,
               };
               let imageSource = PRODUCT_IMAGE_MAP[p.id];
-              
-              // Fallback to a category-relevant image if nothing else works
+
+              // Seller-created products have dynamic IDs (e.g. p_lz9abc_xyz12) not in the map.
+              // Use the uploaded image URL from the backend if available.
+              if (!imageSource && p.image) {
+                const imgPath = String(p.image);
+                if (imgPath.startsWith("/uploads/") || imgPath.startsWith("/assets/")) {
+                  imageSource = { uri: `${CONFIG.BASE_URL}${imgPath}` };
+                } else if (imgPath.startsWith("http")) {
+                  imageSource = { uri: imgPath };
+                }
+              }
+
+              // Last resort: generic category image so the card never shows blank
               if (!imageSource) {
                 const fallbacks = {
                   fashion: MEDIA.categoryJeans,

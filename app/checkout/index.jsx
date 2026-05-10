@@ -75,17 +75,23 @@ export default function CheckoutScreen() {
     return Number(String(value || 0).replace(/[^0-9.]/g, "")) || 0;
   }
 
+  function handleVulnBankCardChange(text) {
+    const digits = text.replace(/\D/g, "").slice(0, 16);
+    setVulnBankCardNumber(digits.replace(/(.{4})/g, "$1 ").trim());
+  }
+
   function handleExpiryChange(text) {
-    // Remove non-digits
-    const cleaned = text.replace(/[^0-9]/g, "");
-    if (cleaned.length <= 2) {
-      setVulnBankExpiry(cleaned);
-    } else if (cleaned.length === 3) {
-      // Auto-insert slash after first 2 digits: "052" -> "05/2"
-      setVulnBankExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2)}`);
+    const prev = vulnBankExpiry;
+    const digits = text.replace(/[^0-9]/g, "").slice(0, 4);
+    if (digits.length === 0) { setVulnBankExpiry(""); return; }
+    if (digits.length <= 2) {
+      if (digits.length === 2 && prev.length < 3) {
+        setVulnBankExpiry(`${digits}/`);
+      } else {
+        setVulnBankExpiry(digits);
+      }
     } else {
-      // Keep only MM/YY format
-      setVulnBankExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`);
+      setVulnBankExpiry(`${digits.slice(0, 2)}/${digits.slice(2, 4)}`);
     }
   }
 
@@ -120,6 +126,24 @@ export default function CheckoutScreen() {
       setMessage("Please select a pickup store to continue.");
       return;
     }
+
+    if (paymentMethod === "vulnbank") {
+      const rawDigits = vulnBankCardNumber.replace(/\s/g, "");
+      if (rawDigits.length !== 16) {
+        setMessage("Card number must be 16 digits");
+        return;
+      }
+      const [mm, yy] = vulnBankExpiry.split("/");
+      if (!mm || !yy || Number(mm) < 1 || Number(mm) > 12 || yy.length !== 2) {
+        setMessage("Enter a valid expiry date (MM/YY)");
+        return;
+      }
+      if (vulnBankCvv.length < 3 || vulnBankCvv.length > 4) {
+        setMessage("CVV must be 3 or 4 digits");
+        return;
+      }
+    }
+
     setMessage("");
     setLoading(true);
 
@@ -303,10 +327,51 @@ export default function CheckoutScreen() {
 
           {paymentMethod === "vulnbank" ? (
             <View style={styles.vulnForm}>
-              <TextInput style={styles.input} value={vulnBankCardNumber} onChangeText={setVulnBankCardNumber} placeholder="Card Number (16 digits)" keyboardType="numeric" />
-              <View style={styles.rowInputs}>
-                <TextInput style={[styles.input, { flex: 1 }]} value={vulnBankExpiry} onChangeText={handleExpiryChange} placeholder="MM/YY" keyboardType="numeric" maxLength={5} />
-                <TextInput style={[styles.input, { flex: 1, marginLeft: 8 }]} value={vulnBankCvv} onChangeText={setVulnBankCvv} placeholder="CVV" secureTextEntry keyboardType="numeric" />
+              <Text style={styles.cardFieldLabel}>Card Number</Text>
+              <View style={styles.cardFieldWrap}>
+                <Ionicons name="card-outline" size={18} color={COLORS.muted} style={styles.cardFieldIcon} />
+                <TextInput
+                  style={styles.cardFieldInput}
+                  value={vulnBankCardNumber}
+                  onChangeText={handleVulnBankCardChange}
+                  placeholder="0000 0000 0000 0000"
+                  placeholderTextColor={COLORS.muted}
+                  keyboardType="numeric"
+                  maxLength={19}
+                />
+              </View>
+              <View style={styles.cardRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardFieldLabel}>Expiry Date</Text>
+                  <View style={styles.cardFieldWrap}>
+                    <Ionicons name="calendar-outline" size={16} color={COLORS.muted} style={styles.cardFieldIcon} />
+                    <TextInput
+                      style={styles.cardFieldInput}
+                      value={vulnBankExpiry}
+                      onChangeText={handleExpiryChange}
+                      placeholder="MM/YY"
+                      placeholderTextColor={COLORS.muted}
+                      keyboardType="numeric"
+                      maxLength={5}
+                    />
+                  </View>
+                </View>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.cardFieldLabel}>CVV / CVC</Text>
+                  <View style={styles.cardFieldWrap}>
+                    <Ionicons name="lock-closed-outline" size={16} color={COLORS.muted} style={styles.cardFieldIcon} />
+                    <TextInput
+                      style={styles.cardFieldInput}
+                      value={vulnBankCvv}
+                      onChangeText={setVulnBankCvv}
+                      placeholder="3-digit code"
+                      placeholderTextColor={COLORS.muted}
+                      secureTextEntry
+                      keyboardType="numeric"
+                      maxLength={4}
+                    />
+                  </View>
+                </View>
               </View>
             </View>
           ) : null}
@@ -381,6 +446,11 @@ const styles = StyleSheet.create({
   noStoreSub: { color: COLORS.muted, fontSize: 12, marginTop: 4, textAlign: "center" },
   vulnForm: { marginTop: 12 },
   rowInputs: { flexDirection: "row", marginTop: 10 },
+  cardFieldLabel: { color: COLORS.text, fontSize: 12, fontWeight: "600", marginBottom: 4, marginTop: 12 },
+  cardFieldWrap: { alignItems: "center", backgroundColor: COLORS.background, borderColor: COLORS.borderGray, borderRadius: 8, borderWidth: 1, flexDirection: "row", paddingHorizontal: 10 },
+  cardFieldIcon: { marginRight: 8 },
+  cardFieldInput: { color: COLORS.text, flex: 1, fontSize: 15, paddingVertical: 12 },
+  cardRow: { flexDirection: "row" },
   input: {
     backgroundColor: "#fff",
     borderColor: COLORS.borderGray,

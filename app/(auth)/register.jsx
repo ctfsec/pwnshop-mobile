@@ -8,6 +8,23 @@ import { saveSession } from "../../storage/insecure";
 
 const GENDERS = ["Male", "Female", "Other"];
 
+function isValidEmail(val) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((val || "").trim());
+}
+
+function isValidDob(val) {
+  if (!val || val.length < 10) return false;
+  const parts = val.split("/");
+  if (parts.length !== 3) return false;
+  const [dd, mm, yyyy] = parts.map(Number);
+  if (!dd || !mm || !yyyy) return false;
+  if (mm < 1 || mm > 12) return false;
+  if (dd < 1 || dd > 31) return false;
+  const currentYear = new Date().getFullYear();
+  if (yyyy < 1900 || yyyy > currentYear) return false;
+  return true;
+}
+
 function FieldLabel({ text }) {
   return <Text style={styles.label}>{text}</Text>;
 }
@@ -58,12 +75,40 @@ export default function Register() {
       setError("First and last name are required");
       return;
     }
-
+    if (/[^a-zA-Z\s'-]/.test(firstName) || /[^a-zA-Z\s'-]/.test(lastName)) {
+      setError("Name should contain letters only");
+      return;
+    }
     if (!email.trim()) {
       setError("Email address is required");
       return;
     }
-
+    if (!isValidEmail(email)) {
+      setError("Please enter a valid email address (e.g. you@example.com)");
+      return;
+    }
+    if (phone.trim() && phone.replace(/[^0-9]/g, "").length < 10) {
+      setError("Phone number must be at least 10 digits");
+      return;
+    }
+    if (dob.trim()) {
+      if (dob.length < 10) {
+        setError("Date of birth is incomplete — enter in DD/MM/YYYY format");
+        return;
+      }
+      if (!isValidDob(dob)) {
+        setError("Invalid date of birth — check day (01-31), month (01-12) and year");
+        return;
+      }
+    }
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -138,7 +183,7 @@ export default function Register() {
 
       <FieldLabel text="Email Address" />
       <TextInput
-        style={styles.input}
+        style={[styles.input, email.length > 4 && !isValidEmail(email) && styles.inputError]}
         placeholder="e.g. you@example.com"
         placeholderTextColor={COLORS.muted}
         value={email}
@@ -147,6 +192,9 @@ export default function Register() {
         autoCapitalize="none"
         autoComplete="off"
       />
+      {email.length > 4 && !isValidEmail(email) && (
+        <Text style={styles.fieldError}>Enter a valid email address</Text>
+      )}
 
       <FieldLabel text="Phone Number" />
       <TextInput
@@ -160,7 +208,7 @@ export default function Register() {
 
       <FieldLabel text="Date of Birth" />
       <TextInput
-        style={styles.input}
+        style={[styles.input, dob.length === 10 && !isValidDob(dob) && styles.inputError]}
         placeholder="DD/MM/YYYY"
         placeholderTextColor={COLORS.muted}
         value={dob}
@@ -168,6 +216,9 @@ export default function Register() {
         keyboardType="number-pad"
         maxLength={10}
       />
+      {dob.length === 10 && !isValidDob(dob) && (
+        <Text style={styles.fieldError}>Invalid date — check day, month and year</Text>
+      )}
 
       <FieldLabel text="Gender" />
       <View style={styles.genderRow}>
@@ -310,4 +361,6 @@ const styles = StyleSheet.create({
   loginLink: { alignItems: "center", marginTop: 16 },
   loginText: { color: COLORS.muted, fontSize: 14 },
   loginHighlight: { color: COLORS.primary, fontWeight: "700" },
+  inputError: { borderColor: "#B00020" },
+  fieldError: { color: "#B00020", fontSize: 11, marginBottom: 4, marginTop: 2 },
 });

@@ -15,7 +15,14 @@ export default function AdminAccessScreen() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  function isValidEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((val || "").trim());
+  }
+
   async function handleVerify() {
+    if (!email.trim()) { setMessage("Email address is required"); return; }
+    if (!isValidEmail(email)) { setMessage("Please enter a valid email address"); return; }
+    if (!password) { setMessage("Password is required"); return; }
     setLoading(true);
     setMessage("");
     try {

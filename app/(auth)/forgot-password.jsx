@@ -26,10 +26,19 @@ export default function ForgotPassword() {
   const [isError, setIsError] = useState(false);
   const [revealedOtp, setRevealedOtp] = useState("");
 
+  function isValidEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((val || "").trim());
+  }
+
   async function handleSendCode() {
     if (!email.trim()) {
       setIsError(true);
       setMessage("Please enter your email address.");
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setIsError(true);
+      setMessage("Please enter a valid email address (e.g. you@example.com).");
       return;
     }
     setLoading(true);
@@ -54,9 +63,19 @@ export default function ForgotPassword() {
   }
 
   async function handleResetPassword() {
-    if (!otp.trim() || !newPassword.trim()) {
+    if (!otp.trim()) {
       setIsError(true);
-      setMessage("Please enter the reset code and a new password.");
+      setMessage("Please enter the 4-digit reset code.");
+      return;
+    }
+    if (!newPassword.trim()) {
+      setIsError(true);
+      setMessage("Please enter a new password.");
+      return;
+    }
+    if (newPassword.trim().length < 6) {
+      setIsError(true);
+      setMessage("New password must be at least 6 characters.");
       return;
     }
     setLoading(true);

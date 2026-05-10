@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../constants/colors";
 import { getSession, saveSession } from "../../storage/insecure";
 import { CONFIG } from "../../api/config";
@@ -9,17 +9,16 @@ import { CONFIG } from "../../api/config";
 function msToCountdown(ms) {
   if (ms <= 0) return "any moment now";
   const s = Math.ceil(ms / 1000);
-  const m = Math.floor(s / 60);
-  const sec = s % 60;
-  return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+  return `${s}s`;
 }
 
 export default function SellerApplyScreen() {
   const router = useRouter();
   const [step, setStep] = useState("loading");
   const [application, setApplication] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [checkMsg, setCheckMsg] = useState("");
   const [countdown, setCountdown] = useState(0);
-  const pollRef = useRef(null);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -41,9 +40,9 @@ export default function SellerApplyScreen() {
         }
         if (json.data?.application?.status === "pending") {
           setApplication(json.data.application);
-          setStep("pending");
           const remaining = (json.data.application.approvalScheduledFor || 0) - Date.now();
           setCountdown(Math.max(0, remaining));
+          setStep("pending");
         } else {
           setStep("intro");
         }
@@ -58,31 +57,32 @@ export default function SellerApplyScreen() {
 
   useEffect(() => {
     if (step !== "pending") return;
-
     timerRef.current = setInterval(() => {
       setCountdown((c) => Math.max(0, c - 1000));
     }, 1000);
+    return () => clearInterval(timerRef.current);
+  }, [step]);
 
-    pollRef.current = setInterval(async () => {
+  async function handleCheckStatus() {
+    setChecking(true);
+    setCheckMsg("");
+    try {
       const { user } = await getSession();
       if (!user) return;
-      try {
-        const res = await fetch(`${CONFIG.BASE_URL}/api/seller/status?userId=${user.id}`);
-        const json = await res.json();
-        if (json.data?.role === "seller") {
-          await saveSession({ user: json.data.user });
-          clearInterval(pollRef.current);
-          clearInterval(timerRef.current);
-          setStep("approved");
-        }
-      } catch {}
-    }, 15000);
-
-    return () => {
-      clearInterval(pollRef.current);
-      clearInterval(timerRef.current);
-    };
-  }, [step]);
+      const res = await fetch(`${CONFIG.BASE_URL}/api/seller/status?userId=${user.id}`);
+      const json = await res.json();
+      if (json.data?.role === "seller") {
+        await saveSession({ user: json.data.user });
+        setStep("approved");
+      } else {
+        setCheckMsg("Your application is still under review. Please check back shortly.");
+      }
+    } catch {
+      setCheckMsg("Unable to check status. Please try again.");
+    } finally {
+      setChecking(false);
+    }
+  }
 
   if (step === "loading") {
     return (
@@ -101,8 +101,9 @@ export default function SellerApplyScreen() {
             <Ionicons name="storefront" size={52} color="#0B7A4B" />
             <Text style={styles.successTitle}>You're a seller</Text>
             <Text style={styles.successSub}>Your seller account is already active.</Text>
-            <TouchableOpacity onPress={() => router.replace("/(tabs)")} style={styles.cta}>
-              <Text style={styles.ctaText}>Go to Seller Dashboard</Text>
+            <TouchableOpacity onPress={() => router.replace("/(tabs)/seller")} style={styles.dashboardBtn}>
+              <Ionicons name="storefront-outline" size={18} color="#fff" />
+              <Text style={styles.dashboardBtnText}>Go to Seller Dashboard</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -118,9 +119,12 @@ export default function SellerApplyScreen() {
           <View style={styles.successCard}>
             <Ionicons name="checkmark-circle" size={64} color="#0B7A4B" />
             <Text style={styles.successTitle}>Application Approved!</Text>
-            <Text style={styles.successSub}>Your seller account is now active. You can start listing products.</Text>
-            <TouchableOpacity onPress={() => router.replace("/(tabs)")} style={styles.cta}>
-              <Text style={styles.ctaText}>Go to Seller Dashboard</Text>
+            <Text style={styles.successSub}>
+              Your seller account for "{application?.storeName}" is now active. You can start listing products.
+            </Text>
+            <TouchableOpacity onPress={() => router.replace("/(tabs)/seller")} style={styles.dashboardBtn}>
+              <Ionicons name="storefront-outline" size={18} color="#fff" />
+              <Text style={styles.dashboardBtnText}>Go to Seller Dashboard</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -129,26 +133,83 @@ export default function SellerApplyScreen() {
   }
 
   if (step === "pending") {
+    const submittedAt = application?.createdAt
+      ? new Date(application.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : null;
+
     return (
       <View style={styles.page}>
         <Header router={router} />
-        <View style={styles.body}>
-          <View style={styles.pendingCard}>
-            <ActivityIndicator color={COLORS.primary} size="large" />
-            <Text style={styles.pendingTitle}>Application Under Review</Text>
-            <Text style={styles.pendingStore}>"{application?.storeName}"</Text>
-            <Text style={styles.pendingText}>
-              Our admin team is reviewing your application. You will be automatically approved.
+        <ScrollView style={styles.body} contentContainerStyle={{ paddingBottom: 32 }}>
+          <View style={styles.submittedCard}>
+            <View style={styles.submittedIconWrap}>
+              <Ionicons name="paper-plane" size={36} color={COLORS.primary} />
+            </View>
+            <Text style={styles.submittedTitle}>Application Submitted!</Text>
+            <Text style={styles.submittedSub}>
+              Your seller application has been received and is being reviewed by our team.
             </Text>
-            <View style={styles.countdownBox}>
-              <Ionicons name="time-outline" size={18} color={COLORS.primary} />
-              <Text style={styles.countdownText}>
-                Estimated approval in: <Text style={styles.countdownValue}>{msToCountdown(countdown)}</Text>
+
+            <View style={styles.detailBox}>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Store Name</Text>
+                <Text style={styles.detailValue}>{application?.storeName || "—"}</Text>
+              </View>
+              {submittedAt && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Submitted At</Text>
+                  <Text style={styles.detailValue}>{submittedAt}</Text>
+                </View>
+              )}
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Status</Text>
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>Under Review</Text>
+                </View>
+              </View>
+              <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+                <Text style={styles.detailLabel}>Auto-approval in</Text>
+                <Text style={[styles.detailValue, { color: countdown > 0 ? COLORS.primary : "#0B7A4B" }]}>
+                  {countdown > 0 ? msToCountdown(countdown) : "Ready - tap Check below"}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.infoBox}>
+              <Ionicons name="information-circle-outline" size={16} color={COLORS.primary} />
+              <Text style={styles.infoText}>
+                Applications are typically approved within 30 seconds. Tap the button below to check your status.
               </Text>
             </View>
-            <Text style={styles.pendingHint}>This screen will update automatically when approved.</Text>
           </View>
-        </View>
+
+          {checkMsg ? (
+            <View style={styles.checkMsgBox}>
+              <Ionicons name="time-outline" size={16} color={COLORS.muted} />
+              <Text style={styles.checkMsgText}>{checkMsg}</Text>
+            </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={[styles.checkBtn, checking && styles.checkBtnDisabled]}
+            onPress={handleCheckStatus}
+            disabled={checking}
+          >
+            {checking
+              ? <ActivityIndicator color="#fff" size="small" />
+              : (
+                <View style={styles.checkBtnInner}>
+                  <Ionicons name="refresh-outline" size={18} color="#fff" />
+                  <Text style={styles.checkBtnText}>Check Approval Status</Text>
+                </View>
+              )
+            }
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
+            <Text style={styles.backLinkText}>Back to Home</Text>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
     );
   }
@@ -175,7 +236,7 @@ export default function SellerApplyScreen() {
           <Ionicons name="storefront-outline" size={52} color={COLORS.primary} />
           <Text style={styles.introTitle}>Sell on Pwnshop</Text>
           <Text style={styles.introCopy}>
-            Join thousands of sellers reaching millions of buyers across Nigeria. Applications are reviewed within 2 minutes.
+            Join thousands of sellers reaching millions of buyers across Nigeria. Applications are reviewed within seconds.
           </Text>
 
           <View style={styles.benefitList}>
@@ -232,16 +293,29 @@ const styles = StyleSheet.create({
   successCard: { alignItems: "center", backgroundColor: "#F0FBF5", borderColor: "#0B7A4B", borderRadius: 14, borderWidth: 1, padding: 28, marginBottom: 20 },
   successTitle: { color: "#0B7A4B", fontFamily: "Syne_700Bold", fontSize: 22, fontWeight: "700", marginTop: 14 },
   successSub: { color: "#2D6A4F", lineHeight: 20, marginTop: 8, textAlign: "center" },
+  dashboardBtn: { alignItems: "center", alignSelf: "stretch", backgroundColor: "#0B7A4B", borderRadius: 10, flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 20, paddingHorizontal: 16, paddingVertical: 14 },
+  dashboardBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
 
-  pendingCard: { alignItems: "center", backgroundColor: COLORS.card, borderColor: COLORS.borderGray, borderRadius: 14, borderWidth: 1, padding: 28 },
-  pendingTitle: { color: COLORS.text, fontFamily: "Syne_700Bold", fontSize: 20, fontWeight: "700", marginTop: 16 },
-  pendingStore: { color: COLORS.primary, fontSize: 16, fontWeight: "600", marginTop: 4 },
-  pendingText: { color: COLORS.muted, lineHeight: 20, marginTop: 10, textAlign: "center" },
-  countdownBox: { alignItems: "center", backgroundColor: COLORS.primary + "12", borderRadius: 10, flexDirection: "row", gap: 8, marginTop: 16, padding: 12 },
-  countdownText: { color: COLORS.text, fontSize: 14 },
-  countdownValue: { color: COLORS.primary, fontWeight: "700" },
-  pendingHint: { color: COLORS.muted, fontSize: 12, marginTop: 12, textAlign: "center" },
-
+  submittedCard: { alignItems: "center", backgroundColor: COLORS.card, borderColor: COLORS.borderGray, borderRadius: 14, borderWidth: 1, marginBottom: 16, padding: 24 },
+  submittedIconWrap: { alignItems: "center", backgroundColor: COLORS.primary + "18", borderRadius: 50, height: 72, justifyContent: "center", width: 72 },
+  submittedTitle: { color: COLORS.text, fontFamily: "Syne_700Bold", fontSize: 22, fontWeight: "700", marginTop: 16 },
+  submittedSub: { color: COLORS.muted, lineHeight: 20, marginTop: 8, textAlign: "center" },
+  detailBox: { alignSelf: "stretch", backgroundColor: COLORS.background, borderRadius: 10, marginTop: 20, padding: 14 },
+  detailRow: { alignItems: "center", borderBottomColor: COLORS.borderGray, borderBottomWidth: 1, flexDirection: "row", justifyContent: "space-between", paddingVertical: 10 },
+  detailLabel: { color: COLORS.muted, fontSize: 13 },
+  detailValue: { color: COLORS.text, fontWeight: "600", fontSize: 13 },
+  statusBadge: { backgroundColor: "#FEF3C7", borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4 },
+  statusText: { color: "#92400E", fontSize: 12, fontWeight: "700" },
+  infoBox: { alignItems: "flex-start", backgroundColor: COLORS.primary + "10", borderRadius: 10, flexDirection: "row", gap: 8, marginTop: 16, padding: 12 },
+  infoText: { color: COLORS.text, flex: 1, fontSize: 13, lineHeight: 18 },
+  checkMsgBox: { alignItems: "center", backgroundColor: COLORS.card, borderRadius: 10, flexDirection: "row", gap: 8, marginBottom: 12, padding: 12 },
+  checkMsgText: { color: COLORS.muted, flex: 1, fontSize: 13 },
+  checkBtn: { alignItems: "center", backgroundColor: COLORS.primary, borderRadius: 10, marginBottom: 12, paddingVertical: 14 },
+  checkBtnDisabled: { opacity: 0.6 },
+  checkBtnInner: { alignItems: "center", flexDirection: "row", gap: 8 },
+  checkBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
+  backLink: { alignItems: "center", paddingVertical: 12 },
+  backLinkText: { color: COLORS.muted, fontSize: 14 },
   copy: { color: COLORS.text, lineHeight: 22 },
   cta: { alignItems: "center", backgroundColor: COLORS.accent, borderRadius: 10, paddingVertical: 14 },
   ctaText: { color: "#fff", fontWeight: "700", fontSize: 15 },

@@ -14,8 +14,26 @@ export default function Login() {
   const [error, setError] = useState("");
   const router = useRouter();
 
+  function isValidEmail(val) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+  }
+
   async function handleLogin() {
     setError("");
+
+    if (!identifier.trim()) {
+      setError("Email address is required");
+      return;
+    }
+    if (!isValidEmail(identifier)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -140,6 +158,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderGray,
     borderRadius: 6,
     borderWidth: 1,
+    color: COLORS.text,
     marginBottom: 12,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -155,6 +174,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   passwordInput: {
+    color: COLORS.text,
     flex: 1,
     paddingVertical: 12,
   },

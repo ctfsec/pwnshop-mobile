@@ -16,6 +16,7 @@
     },
     "android": {
       "package": "com.r007sec.pwnshop",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/pwnshop-icon.png",
         "backgroundColor": "#1a0033"

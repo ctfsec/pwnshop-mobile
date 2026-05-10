@@ -84,6 +84,25 @@ export default function WalletScreen() {
   );
 
   async function handleFundWallet() {
+    const rawDigits = cardNumber.replace(/\s/g, "");
+    if (rawDigits.length !== 16) {
+      setMessage("Card number must be 16 digits");
+      return;
+    }
+    const [mm, yy] = expiry.split("/");
+    if (!mm || !yy || Number(mm) < 1 || Number(mm) > 12 || yy.length !== 2) {
+      setMessage("Enter a valid expiry date (MM/YY)");
+      return;
+    }
+    if (cvv.length < 3 || cvv.length > 4) {
+      setMessage("CVV must be 3 or 4 digits");
+      return;
+    }
+    if (!amount || Number(amount) <= 0) {
+      setMessage("Enter a valid amount greater than zero");
+      return;
+    }
+
     setMessage("");
     setFunding(true);
 
@@ -108,17 +127,25 @@ export default function WalletScreen() {
     }
   }
 
+  function handleCardNumberChange(text) {
+    const digits = text.replace(/\D/g, "").slice(0, 16);
+    const spaced = digits.replace(/(.{4})/g, "$1 ").trim();
+    setCardNumber(spaced);
+  }
+
   function handleExpiryChange(text) {
-    // Remove non-digits
-    const cleaned = text.replace(/[^0-9]/g, "");
-    if (cleaned.length <= 2) {
-      setExpiry(cleaned);
-    } else if (cleaned.length === 3) {
-      // Auto-insert slash after first 2 digits: "052" -> "05/2"
-      setExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2)}`);
+    const prev = expiry;
+    const digits = text.replace(/[^0-9]/g, "").slice(0, 4);
+    if (digits.length === 0) { setExpiry(""); return; }
+    if (digits.length <= 2) {
+      // Auto-append slash when user typed 2 digits and is still adding (not deleting)
+      if (digits.length === 2 && prev.length < 3) {
+        setExpiry(`${digits}/`);
+      } else {
+        setExpiry(digits);
+      }
     } else {
-      // Keep only MM/YY format
-      setExpiry(`${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`);
+      setExpiry(`${digits.slice(0, 2)}/${digits.slice(2, 4)}`);
     }
   }
 
@@ -171,16 +198,78 @@ export default function WalletScreen() {
 
         <View style={styles.formCard}>
           <Text style={styles.sectionTitle}>Fund via VulnBank</Text>
-          <Text style={styles.sectionText}>Use your VulnBank card to transfer money into your PwnShop wallet.</Text>
+          <Text style={styles.sectionText}>Use your VulnBank debit card to top up your PwnShop wallet.</Text>
 
-          <TextInput style={styles.input} placeholder="Card Number (16 digits)" value={cardNumber} onChangeText={setCardNumber} keyboardType="numeric" />
-          <View style={styles.rowInputs}>
-            <TextInput style={[styles.input, { flex: 1 }]} placeholder="MM/YY" value={expiry} onChangeText={handleExpiryChange} keyboardType="numeric" maxLength={5} />
-            <TextInput style={[styles.input, { flex: 1, marginLeft: 8 }]} placeholder="CVV" value={cvv} onChangeText={setCvv} secureTextEntry keyboardType="numeric" />
+          {/* Card Number */}
+          <Text style={styles.fieldLabel}>Card Number</Text>
+          <View style={styles.fieldWrap}>
+            <Ionicons name="card-outline" size={18} color={COLORS.muted} style={styles.fieldIcon} />
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="0000 0000 0000 0000"
+              placeholderTextColor={COLORS.muted}
+              value={cardNumber}
+              onChangeText={handleCardNumberChange}
+              keyboardType="numeric"
+              maxLength={19}
+            />
           </View>
-          <TextInput style={styles.input} placeholder="Amount (₦)" value={amount} onChangeText={setAmount} keyboardType="numeric" />
 
-          {message ? <Text style={styles.message}>{message}</Text> : null}
+          {/* Expiry + CVV row */}
+          <View style={styles.cardRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fieldLabel}>Expiry Date</Text>
+              <View style={styles.fieldWrap}>
+                <Ionicons name="calendar-outline" size={16} color={COLORS.muted} style={styles.fieldIcon} />
+                <TextInput
+                  style={styles.fieldInput}
+                  placeholder="MM/YY"
+                  placeholderTextColor={COLORS.muted}
+                  value={expiry}
+                  onChangeText={handleExpiryChange}
+                  keyboardType="numeric"
+                  maxLength={5}
+                />
+              </View>
+            </View>
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.fieldLabel}>CVV / CVC</Text>
+              <View style={styles.fieldWrap}>
+                <Ionicons name="lock-closed-outline" size={16} color={COLORS.muted} style={styles.fieldIcon} />
+                <TextInput
+                  style={styles.fieldInput}
+                  placeholder="3-digit code"
+                  placeholderTextColor={COLORS.muted}
+                  value={cvv}
+                  onChangeText={setCvv}
+                  secureTextEntry
+                  keyboardType="numeric"
+                  maxLength={4}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Amount */}
+          <Text style={styles.fieldLabel}>Amount</Text>
+          <View style={styles.fieldWrap}>
+            <Text style={styles.currencySign}>₦</Text>
+            <TextInput
+              style={styles.fieldInput}
+              placeholder="Enter amount"
+              placeholderTextColor={COLORS.muted}
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+            />
+          </View>
+
+          {message ? (
+            <View style={[styles.msgBubble, message.includes("added") ? styles.msgSuccess : styles.msgError]}>
+              <Ionicons name={message.includes("added") ? "checkmark-circle-outline" : "alert-circle-outline"} size={16} color={message.includes("added") ? "#0B7A4B" : "#B00020"} />
+              <Text style={[styles.msgText, { color: message.includes("added") ? "#0B7A4B" : "#B00020" }]}>{message}</Text>
+            </View>
+          ) : null}
 
           <TouchableOpacity disabled={funding} onPress={handleFundWallet} style={styles.cta}>
             {funding ? <ActivityIndicator color="#fff" /> : <Text style={styles.ctaText}>Fund Wallet</Text>}
@@ -283,6 +372,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   rowInputs: { flexDirection: "row", marginTop: 10 },
+  fieldLabel: { color: COLORS.text, fontSize: 12, fontWeight: "600", marginTop: 14, marginBottom: 4 },
+  fieldWrap: { alignItems: "center", backgroundColor: COLORS.background, borderColor: COLORS.borderGray, borderRadius: 8, borderWidth: 1, flexDirection: "row", paddingHorizontal: 10 },
+  fieldIcon: { marginRight: 8 },
+  fieldInput: { color: COLORS.text, flex: 1, fontSize: 15, paddingVertical: 12 },
+  currencySign: { color: COLORS.text, fontSize: 15, fontWeight: "700", marginRight: 4 },
+  cardRow: { flexDirection: "row", gap: 0 },
+  msgBubble: { alignItems: "center", borderRadius: 8, borderWidth: 1, flexDirection: "row", gap: 8, marginTop: 12, padding: 10 },
+  msgSuccess: { backgroundColor: "#f0fdf4", borderColor: "#0B7A4B" },
+  msgError: { backgroundColor: "#FFF5F5", borderColor: "#B00020" },
+  msgText: { flex: 1, fontSize: 13 },
   message: { color: COLORS.primary, marginTop: 10 },
   cta: { alignItems: "center", backgroundColor: COLORS.accent, borderRadius: 8, marginTop: 12, paddingVertical: 12 },
   ctaText: { color: "#fff", fontWeight: "700" },

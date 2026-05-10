@@ -278,7 +278,7 @@ Body: { "confirm": "RESET_PWNSHOP_LAB" }
 | Project | Description |
 |---|---|
 | [PwnShop Web](https://github.com/r007sec/pwnshop) | The original web version - 45 vulnerabilities including SSTI→RCE and SQL injection |
-| [VulnBank](https://vulnbank.org) | Intentionally vulnerable banking API used for payment integration |
+| [VulnBank](https://vulnbank.org) | Intentionally vulnerable banking API used for payment integration | 
 
 ---
 

@@ -35,6 +35,7 @@ export default function ExternalWebViewScreen() {
         domStorageEnabled={true}
         originWhitelist={["*"]}
         allowsInlineMediaPlayback={true}
+        mixedContentMode="always"
         onError={() => {}}
       />
     </View>

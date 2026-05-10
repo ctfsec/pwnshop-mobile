@@ -2,6 +2,7 @@
   "expo": {
     "name": "PwnShop",
     "slug": "pwnshop-mobile",
+    "owner": "ctfsecurity",
     "version": "1.0.0",
     "scheme": "pwnshop",
     "orientation": "portrait",

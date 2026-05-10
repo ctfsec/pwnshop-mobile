@@ -29,7 +29,7 @@
 
 ## Overview
 
-PwnShop Mobile is the Android companion to [PwnShop Web](https://github.com/r007sec/pwnshop) - a fully functional e-commerce platform deliberately built with **36 documented security vulnerabilities** spanning OWASP Mobile Top 10 (2024), OWASP LLM Top 10 (2025), and real-world API/business logic flaws.
+PwnShop Mobile is the Android companion to [PwnShop Web](https://github.com/r007sec/pwnshop) - a fully functional e-commerce platform deliberately built with **47 documented security vulnerabilities** spanning OWASP Mobile Top 10 (2024), OWASP LLM Top 10 (2025), and real-world API/business logic flaws.
 
 It is designed for:
 - **CTF competitions** - each vulnerability has a unique PWN-ID and difficulty rating

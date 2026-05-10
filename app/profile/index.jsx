@@ -211,7 +211,7 @@ export default function ProfileScreen() {
           <View style={styles.card}>
             <Text style={styles.cardLabel}>Your Referral Code</Text>
             <View style={styles.referralRow}>
-              <Text style={styles.referralCode}>{referralCode || "—"}</Text>
+              <Text style={styles.referralCode} numberOfLines={1} ellipsizeMode="middle">{referralCode || "—"}</Text>
               <TouchableOpacity
                 style={styles.copyBtn}
                 onPress={() => Share.share({ message: `Use my PwnShop referral code: ${referralCode}` })}
@@ -406,9 +406,9 @@ const styles = StyleSheet.create({
   cardLabel: { fontSize: 12, color: COLORS.muted, marginBottom: 6, fontWeight: "600" },
   cardHint: { fontSize: 12, color: COLORS.muted, lineHeight: 17, marginTop: 4 },
 
-  referralRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  referralRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   referralCode: {
-    fontSize: 17, fontWeight: "700", color: COLORS.primary,
+    flex: 1, fontSize: 14, fontWeight: "700", color: COLORS.primary,
     letterSpacing: 1, fontFamily: "Syne_700Bold",
   },
   copyBtn: {
@@ -416,6 +416,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background, borderRadius: 8,
     paddingHorizontal: 10, paddingVertical: 6,
     borderWidth: 1, borderColor: COLORS.borderGray,
+    flexShrink: 0,
   },
   copyBtnText: { fontSize: 12, fontWeight: "600", color: COLORS.primary },
 

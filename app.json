@@ -1,29 +1,67 @@
 {
   "expo": {
-    "name": "pwnshop-mobile",
+    "name": "PwnShop",
     "slug": "pwnshop-mobile",
     "version": "1.0.0",
+    "scheme": "pwnshop",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "icon": "./assets/pwnshop-icon.png",
+    "platforms": [
+      "android"
+    ],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/pwnshop-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "ios": {
-      "supportsTablet": true
+      "backgroundColor": "#1a0033"
     },
     "android": {
+      "package": "com.r007sec.pwnshop",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/pwnshop-icon.png",
+        "backgroundColor": "#1a0033"
       },
-      "edgeToEdgeEnabled": true
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": false,
+          "data": [
+            {
+              "scheme": "pwnshop",
+              "host": "admin"
+            },
+            {
+              "scheme": "pwnshop",
+              "host": "wallet"
+            },
+            {
+              "scheme": "pwnshop",
+              "host": "checkout"
+            },
+            {
+              "scheme": "pwnshop",
+              "host": "user",
+              "pathPattern": "/.*"
+            },
+            {
+              "scheme": "pwnshop",
+              "host": "order",
+              "pathPattern": "/.*"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2d635f7b-5b9b-4e45-8d3b-b0fd302b1b4d"
+      }
     }
   }
 }

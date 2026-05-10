@@ -39,3 +39,21 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Backend (separate repo — github.com/r007sec/pwnshop-backend)
+/backend/
+
+# Secrets
+constants/api-keys.js
+.env
+.env.local
+
+# Internal planning docs
+pwnshop_mobile_master_plan_v2.md
+EXPLOITATION_GUIDE.md
+.claude/
+
+# Product image uploads (large files served from backend, not app assets)
+assets/1776*
+assets/1777*
+assets/9c98*

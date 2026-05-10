@@ -9,7 +9,7 @@
     <img src="https://img.shields.io/badge/React_Native-0.81-61DAFB?logo=react&logoColor=white" />
     <img src="https://img.shields.io/badge/Expo-SDK_54-000020?logo=expo&logoColor=white" />
     <img src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js&logoColor=white" />
-    <img src="https://img.shields.io/badge/Vulnerabilities-36-red" />
+    <img src="https://img.shields.io/badge/Vulnerabilities-47-red" />
     <img src="https://img.shields.io/badge/OWASP_Mobile_Top_10-2024-orange" />
     <img src="https://img.shields.io/badge/OWASP_LLM_Top_10-2025-purple" />
   </p>
@@ -57,10 +57,10 @@ Unlike generic vulnerable apps, PwnShop Mobile mirrors a real Nigerian e-commerc
 
 | Category | Count | OWASP Mapping |
 |---|---|---|
-| OWASP Mobile Top 10 (2024) | 22 | M1–M10 |
+| OWASP Mobile Top 10 (2024) | 23 | M1–M10 |
 | OWASP LLM Top 10 (2025) | 10 | LLM01–LLM10 |
 | Business Logic & API | 14 | OWASP API Top 10 |
-| **Total** | **36** | |
+| **Total** | **47** | |
 
 | Difficulty | Count |
 |---|---|

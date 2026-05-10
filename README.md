@@ -20,8 +20,7 @@
 
   <p>
     <a href="https://github.com/r007sec/pwnshop">🌐 Web Version</a> &nbsp;·&nbsp;
-    <a href="https://github.com/r007sec/pwnshop-mobile/releases">📥 Download APK</a> &nbsp;·&nbsp;
-    <a href="EXPLOITATION_GUIDE.md">🎯 Exploitation Guide</a>
+    <a href="https://github.com/ctfsec/pwnshop-mobile/releases">📥 Download APK</a>
   </p>
 </div>
 

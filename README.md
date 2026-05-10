@@ -196,8 +196,6 @@ All accounts start with **₦10,000 wallet balance** (Welcome Bonus - itself a v
 
 ## Vulnerability Index
 
-See [EXPLOITATION_GUIDE.md](EXPLOITATION_GUIDE.md) for step-by-step exploit instructions.
-
 ### OWASP Mobile Top 10 (2024)
 
 | ID | Vulnerability | Category | Difficulty |

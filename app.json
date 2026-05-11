@@ -17,7 +17,6 @@
     },
     "android": {
       "package": "com.r007sec.pwnshop",
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/pwnshop-icon.png",
         "backgroundColor": "#1a0033"
@@ -64,6 +63,16 @@
       "eas": {
         "projectId": "2d635f7b-5b9b-4e45-8d3b-b0fd302b1b4d"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
+    ]
   }
 }

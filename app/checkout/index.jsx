@@ -122,6 +122,11 @@ export default function CheckoutScreen() {
   }
 
   async function handlePlaceOrder() {
+    if (shippingMethod === "delivery_default" && !shippingAddress.trim()) {
+      setMessage("Please enter a delivery address to continue.");
+      return;
+    }
+
     if (shippingMethod === "pickup_store" && !selectedStore) {
       setMessage("Please select a pickup store to continue.");
       return;

@@ -6,48 +6,61 @@ import { COLORS } from "../../constants/colors";
 import { getOrders } from "../../api/orders";
 import { getSession } from "../../storage/insecure";
 
+// thresholdMs: elapsed time since order placed before this stage becomes active
+// offsetMs: added to createdAt for the displayed timestamp on each milestone
 const TRACKING_STATUSES = [
-  { id: 1, label: "Order Placed",       icon: "checkmark-circle",      status: "pending",          offsetMs: 0 },
-  { id: 2, label: "Payment Confirmed",  icon: "checkmark-circle",      status: "pending",          offsetMs: 2 * 60 * 1000 },
-  { id: 3, label: "Processing",         icon: "hourglass",             status: "processing",       offsetMs: 20 * 60 * 1000 },
-  { id: 4, label: "Shipped",            icon: "airplane",              status: "in_transit",       offsetMs: 3 * 60 * 60 * 1000 },
-  { id: 5, label: "Out for Delivery",   icon: "bicycle",               status: "out_for_delivery", offsetMs: 26 * 60 * 60 * 1000 },
-  { id: 6, label: "Delivered",          icon: "checkmark-done-circle", status: "completed",        offsetMs: 48 * 60 * 60 * 1000 },
+  { id: 1, label: "Order Placed",       icon: "checkmark-circle",      thresholdMs: 0,              offsetMs: 0 },
+  { id: 2, label: "Payment Confirmed",  icon: "checkmark-circle",      thresholdMs: 10 * 1000,      offsetMs: 10 * 1000 },
+  { id: 3, label: "Processing",         icon: "hourglass",             thresholdMs: 30 * 1000,      offsetMs: 30 * 1000 },
+  { id: 4, label: "Shipped",            icon: "airplane",              thresholdMs: 60 * 1000,      offsetMs: 60 * 1000 },
+  { id: 5, label: "Out for Delivery",   icon: "bicycle",               thresholdMs: 2 * 60 * 1000, offsetMs: 2 * 60 * 1000 },
+  { id: 6, label: "Delivered",          icon: "checkmark-done-circle", thresholdMs: 5 * 60 * 1000, offsetMs: 5 * 60 * 1000 },
 ];
+
+function getStageFromElapsed(elapsedMs) {
+  let stage = 1;
+  for (let i = 0; i < TRACKING_STATUSES.length; i++) {
+    if (elapsedMs >= TRACKING_STATUSES[i].thresholdMs) stage = i + 1;
+  }
+  return stage;
+}
 
 export default function TrackingScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [order, setOrder] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
-  const [currentStage, setCurrentStage] = React.useState(2);
+  const [currentStage, setCurrentStage] = React.useState(1);
 
   React.useEffect(() => {
     let mounted = true;
+    let ticker = null;
 
     (async () => {
       const { user } = await getSession();
       const orders = await getOrders(user?.id || "u1");
-      
+
       if (mounted) {
         const foundOrder = orders.data?.find((o) => o.id === id);
         if (foundOrder) {
           setOrder(foundOrder);
-          // Simulate different stages based on order status
-          const stageMap = {
-            pending: 2,
-            processing: 3,
-            in_transit: 4,
-            out_for_delivery: 5,
-            completed: 6,
+          const orderTime = new Date(foundOrder.createdAt).getTime();
+
+          const tick = () => {
+            const elapsed = Date.now() - orderTime;
+            setCurrentStage(getStageFromElapsed(elapsed));
           };
-          setCurrentStage(stageMap[foundOrder.status] || 2);
+          tick();
+          ticker = setInterval(tick, 1000);
         }
         setLoading(false);
       }
     })();
 
-    return () => (mounted = false);
+    return () => {
+      mounted = false;
+      if (ticker) clearInterval(ticker);
+    };
   }, [id]);
 
   if (!order) {

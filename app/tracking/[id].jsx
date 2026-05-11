@@ -7,12 +7,12 @@ import { getOrders } from "../../api/orders";
 import { getSession } from "../../storage/insecure";
 
 const TRACKING_STATUSES = [
-  { id: 1, label: "Order Placed", icon: "checkmark-circle", status: "pending" },
-  { id: 2, label: "Payment Confirmed", icon: "checkmark-circle", status: "pending" },
-  { id: 3, label: "Processing", icon: "hourglass", status: "processing" },
-  { id: 4, label: "Shipped", icon: "airplane", status: "in_transit" },
-  { id: 5, label: "Out for Delivery", icon: "bicycle", status: "out_for_delivery" },
-  { id: 6, label: "Delivered", icon: "checkmark-done-circle", status: "completed" },
+  { id: 1, label: "Order Placed",       icon: "checkmark-circle",      status: "pending",          offsetMs: 0 },
+  { id: 2, label: "Payment Confirmed",  icon: "checkmark-circle",      status: "pending",          offsetMs: 2 * 60 * 1000 },
+  { id: 3, label: "Processing",         icon: "hourglass",             status: "processing",       offsetMs: 20 * 60 * 1000 },
+  { id: 4, label: "Shipped",            icon: "airplane",              status: "in_transit",       offsetMs: 3 * 60 * 60 * 1000 },
+  { id: 5, label: "Out for Delivery",   icon: "bicycle",               status: "out_for_delivery", offsetMs: 26 * 60 * 60 * 1000 },
+  { id: 6, label: "Delivered",          icon: "checkmark-done-circle", status: "completed",        offsetMs: 48 * 60 * 60 * 1000 },
 ];
 
 export default function TrackingScreen() {
@@ -102,14 +102,9 @@ export default function TrackingScreen() {
                   <Text style={[styles.statusLabel, (isCompleted || isCurrent) && styles.statusLabelActive]}>
                     {status.label}
                   </Text>
-                  {isCurrent && (
+                  {(isCompleted || isCurrent) && (
                     <Text style={styles.statusTime}>
-                      {new Date(order.createdAt).toLocaleString()}
-                    </Text>
-                  )}
-                  {isCompleted && idx < currentStage - 1 && (
-                    <Text style={styles.statusTime}>
-                      {new Date(order.createdAt).toLocaleString()}
+                      {new Date(new Date(order.createdAt).getTime() + status.offsetMs).toLocaleString()}
                     </Text>
                   )}
                 </View>

@@ -125,7 +125,7 @@ export default function HomeTab() {
         {HERO_BANNERS.map((banner) => (
           <TouchableOpacity
             key={banner.id}
-            onPress={() => openCategory(banner.id === "hero-1" ? "deals" : "fashion")}
+            onPress={() => banner.id === "hero-1" ? router.push("/(tabs)/deals") : openCategory("browse-all")}
             style={styles.heroCard}
           >
             <View style={styles.heroCopy}>

@@ -63,9 +63,9 @@ Unlike generic vulnerable apps, PwnShop Mobile mirrors a real Nigerian e-commerc
 
 | Difficulty | Count |
 |---|---|
-| Easy | 12 |
-| Medium | 14 |
-| Hard | 10 |
+| Easy | 22 |
+| Medium | 18 |
+| Hard | 7 |
 
 ---
 

@@ -173,6 +173,7 @@ export default function ProductDetailsScreen() {
       qty,
       color: selectedColor,
       size: selectedSize,
+      category: product?.category || "",
     });
     router.push("/(tabs)/cart");
   }
@@ -248,14 +249,23 @@ export default function ProductDetailsScreen() {
           <Text style={styles.price}>{formatNaira(product ? (product.priceNaira || 0) : 0)}</Text>
         )}
         <Text style={styles.shipping}>Shipping: ₦{Number(product?.shippingFeeNaira || 0).toLocaleString()}</Text>
-        <Text style={styles.stock}>Stock Available: <Text style={{ color: COLORS.primary, fontWeight: "700" }}>{product?.stock || 0}</Text></Text>
+        {product && Number(product.stock) === 0 ? (
+          <View style={styles.outOfStockBadge}>
+            <Ionicons name="close-circle" size={14} color="#B00020" />
+            <Text style={styles.outOfStockText}>Out of Stock</Text>
+          </View>
+        ) : (
+          <Text style={styles.stock}>In Stock: <Text style={{ color: COLORS.accent, fontWeight: "700" }}>{product?.stock || 0}</Text></Text>
+        )}
 
-        <View style={styles.qtyRow}>
-          <Text style={{ marginRight: 8 }}>Quantity:</Text>
-          <TouchableOpacity onPress={() => setQty((q) => Math.max(1, q - 1))} style={styles.qtyBtn}><Text>-</Text></TouchableOpacity>
-          <View style={styles.qtyBox}><Text>{qty}</Text></View>
-          <TouchableOpacity onPress={() => setQty((q) => Math.min(product?.stock || 1, q + 1))} style={styles.qtyBtn}><Text>+</Text></TouchableOpacity>
-        </View>
+        {(!product || Number(product?.stock) > 0) && (
+          <View style={styles.qtyRow}>
+            <Text style={{ marginRight: 8 }}>Quantity:</Text>
+            <TouchableOpacity onPress={() => setQty((q) => Math.max(1, q - 1))} style={styles.qtyBtn}><Text>-</Text></TouchableOpacity>
+            <View style={styles.qtyBox}><Text>{qty}</Text></View>
+            <TouchableOpacity onPress={() => setQty((q) => Math.min(product?.stock || 1, q + 1))} style={styles.qtyBtn}><Text>+</Text></TouchableOpacity>
+          </View>
+        )}
 
         <View style={styles.bulkBox}><Text style={{ color: COLORS.primary }}>Call us for Bulk Purchases: 07080635700</Text></View>
 
@@ -291,8 +301,12 @@ export default function ProductDetailsScreen() {
           <Text style={styles.selectionText}>Selected size: {selectedSize}</Text>
         </View>
 
-        <TouchableOpacity onPress={handleAdd} style={styles.cta}>
-          <Text style={styles.ctaText}>Add To Cart</Text>
+        <TouchableOpacity
+          onPress={handleAdd}
+          disabled={!product || Number(product?.stock) === 0}
+          style={[styles.cta, (!product || Number(product?.stock) === 0) && styles.ctaDisabled]}
+        >
+          <Text style={styles.ctaText}>{product && Number(product.stock) === 0 ? "Out of Stock" : "Add To Cart"}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={handleWishlist} style={[styles.secondaryCta, inWishlist && styles.wishlistActive]}>
@@ -435,6 +449,9 @@ const styles = StyleSheet.create({
   price: { color: COLORS.primary, fontSize: 20, fontWeight: "700", marginTop: 6 },
   shipping: { color: COLORS.muted, fontSize: 14, marginTop: 4 },
   stock: { color: COLORS.muted, fontSize: 14, marginTop: 4 },
+  outOfStockBadge: { alignItems: "center", backgroundColor: "#FDECEA", borderRadius: 6, flexDirection: "row", gap: 4, alignSelf: "flex-start", marginTop: 6, paddingHorizontal: 10, paddingVertical: 5 },
+  outOfStockText: { color: "#B00020", fontSize: 13, fontWeight: "700" },
+  ctaDisabled: { backgroundColor: COLORS.muted, opacity: 0.7 },
   optionGroup: {
     marginTop: 12,
   },

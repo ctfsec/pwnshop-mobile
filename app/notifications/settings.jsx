@@ -1,10 +1,26 @@
 import React from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { savePushToken, getPushNotifications } from "../../api/notifications";
+
+const NOTIF_PREFS_KEY = "notif_prefs";
+
+async function loadNotifPrefs() {
+  try {
+    const raw = await AsyncStorage.getItem(NOTIF_PREFS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function saveNotifPrefs(prefs) {
+  await AsyncStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs));
+}
 
 export default function NotificationSettingsScreen() {
   const router = useRouter();
@@ -22,8 +38,15 @@ export default function NotificationSettingsScreen() {
 
     (async () => {
       const { user: storedUser } = await getSession();
+      const prefs = await loadNotifPrefs();
       if (mounted) {
         setUser(storedUser);
+        if (prefs) {
+          setPushEnabled(Boolean(prefs.pushEnabled));
+          setNotifDeals(prefs.notifDeals !== false);
+          setNotifOrders(prefs.notifOrders !== false);
+          setNotifAccount(prefs.notifAccount !== false);
+        }
         if (storedUser) {
           const res = await getPushNotifications();
           if (res.ok && Array.isArray(res.data)) {
@@ -45,14 +68,31 @@ export default function NotificationSettingsScreen() {
 
       if (res.ok) {
         setPushEnabled(true);
+        await saveNotifPrefs({ pushEnabled: true, notifDeals, notifOrders, notifAccount });
         setMessage("✓ Push notifications enabled");
       } else {
         setMessage("Failed to enable push notifications");
       }
     } else {
       setPushEnabled(false);
+      await saveNotifPrefs({ pushEnabled: false, notifDeals, notifOrders, notifAccount });
       setMessage("Push notifications disabled");
     }
+  }
+
+  async function handleToggleDeals(v) {
+    setNotifDeals(v);
+    await saveNotifPrefs({ pushEnabled, notifDeals: v, notifOrders, notifAccount });
+  }
+
+  async function handleToggleOrders(v) {
+    setNotifOrders(v);
+    await saveNotifPrefs({ pushEnabled, notifDeals, notifOrders: v, notifAccount });
+  }
+
+  async function handleToggleAccount(v) {
+    setNotifAccount(v);
+    await saveNotifPrefs({ pushEnabled, notifDeals, notifOrders, notifAccount: v });
   }
 
   if (!user) {
@@ -111,7 +151,7 @@ export default function NotificationSettingsScreen() {
                   <Text style={styles.optionTitle}>Deals & Promotions</Text>
                   <Text style={styles.optionDescription}>Get notified about special offers</Text>
                 </View>
-                <Switch value={notifDeals} onValueChange={setNotifDeals} trackColor={{ true: COLORS.primary }} />
+                <Switch value={notifDeals} onValueChange={handleToggleDeals} trackColor={{ true: COLORS.primary }} />
               </View>
               <View style={styles.notificationOption}>
                 <Ionicons name="cube" size={20} color={COLORS.primary} />
@@ -119,7 +159,7 @@ export default function NotificationSettingsScreen() {
                   <Text style={styles.optionTitle}>Order Updates</Text>
                   <Text style={styles.optionDescription}>Track your shipments</Text>
                 </View>
-                <Switch value={notifOrders} onValueChange={setNotifOrders} trackColor={{ true: COLORS.primary }} />
+                <Switch value={notifOrders} onValueChange={handleToggleOrders} trackColor={{ true: COLORS.primary }} />
               </View>
               <View style={styles.notificationOption}>
                 <Ionicons name="person" size={20} color={COLORS.primary} />
@@ -127,7 +167,7 @@ export default function NotificationSettingsScreen() {
                   <Text style={styles.optionTitle}>Account Activity</Text>
                   <Text style={styles.optionDescription}>Security and login alerts</Text>
                 </View>
-                <Switch value={notifAccount} onValueChange={setNotifAccount} trackColor={{ true: COLORS.primary }} />
+                <Switch value={notifAccount} onValueChange={handleToggleAccount} trackColor={{ true: COLORS.primary }} />
               </View>
             </View>
 

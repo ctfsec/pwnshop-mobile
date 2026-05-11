@@ -33,10 +33,12 @@ export default function CartTab() {
   async function handleValidateCoupon() {
     setCouponMessage("");
     try {
+      const cartCategories = [...new Set(items.map(it => it.category).filter(Boolean))];
       const response = await validateCoupon({
         code: couponCode,
         subtotalNaira: subtotal,
         userId: "u1",
+        categories: cartCategories,
       });
       applyCoupon({
         code: response.data.code,

@@ -90,7 +90,7 @@ Unlike generic vulnerable apps, PwnShop Mobile mirrors a real Nigerian e-commerc
 
 ## Quick Start - Install the APK
 
-**No setup required.** The backend is live at `https://pwnshop-backend.onrender.com`.
+**No setup required.** The backend is already running.
 
 1. Download the latest APK from the [Releases page](https://github.com/r007sec/pwnshop-mobile/releases)
 2. Enable **Install from Unknown Sources** on your Android device
@@ -117,7 +117,7 @@ npm install
 npx expo start
 ```
 
-The app connects to the live backend by default (`https://pwnshop-backend.onrender.com`).
+The app connects to the live backend by default.
 
 To point at a local backend, edit `constants/config.js`:
 

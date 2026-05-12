@@ -150,9 +150,8 @@ eas build -p android --profile preview
 | Role | Email | Password | Notes |
 |---|---|---|---|
 | Admin | `admin@pwnshop.com` | `admin123` | Full admin panel access |
-| Seller | `seller@pwnshop.com` | `seller123` | Seller dashboard + products |
-| Buyer | `buyer@pwnshop.com` | `buyer123` | Shopping + wallet |
-| Buyer 2 | `alice@pwnshop.com` | `alice123` | For IDOR testing |
+| Seller | `seller@pwnshop.com` | `password123` | Seller dashboard + products |
+| Buyer | `buyer@pwnshop.com` | `password123` | Shopping + wallet |
 
 All accounts start with **₦10,000 wallet balance** (Welcome Bonus - itself a vulnerability: PWN-A004).
 

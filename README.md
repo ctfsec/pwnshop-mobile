@@ -149,7 +149,6 @@ eas build -p android --profile preview
 
 | Role | Email | Password | Notes |
 |---|---|---|---|
-| Admin | `admin@pwnshop.com` | `admin123` | Full admin panel access |
 | Seller | `seller@pwnshop.com` | `password123` | Seller dashboard + products |
 | Buyer | `buyer@pwnshop.com` | `password123` | Shopping + wallet |
 

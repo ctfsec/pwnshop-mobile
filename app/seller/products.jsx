@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { deleteSellerProduct, getSellerProducts } from "../../api/seller";
@@ -11,6 +12,9 @@ function money(value) {
 
 export default function SellerProductsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 45 : 0;
   const [sellerId, setSellerId] = useState("");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,6 +87,7 @@ export default function SellerProductsScreen() {
       ))}
 
       {!loading && products.length === 0 ? <Text style={styles.empty}>No products yet.</Text> : null}
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
 import { getOrderById } from "../../api/orders";
@@ -15,6 +16,9 @@ function formatDate(value) {
 
 export default function OrderDetailScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 52 : 0;
   const { id } = useLocalSearchParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -99,6 +103,7 @@ export default function OrderDetailScreen() {
         <TouchableOpacity onPress={() => router.push("/orders")} style={styles.cta}>
           <Text style={styles.ctaText}>Back to Orders</Text>
         </TouchableOpacity>
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
     </View>
   );

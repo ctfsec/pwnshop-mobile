@@ -99,7 +99,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.page}>
+    <KeyboardAvoidingView behavior="padding" style={styles.page}>
       <View style={styles.hero}>
         <View style={styles.logoWrap}>
           <Ionicons name="key" size={34} color="#fff" />

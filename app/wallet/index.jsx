@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
 import { fundWallet, getWalletBalance, getWalletHistory } from "../../api/wallet";
@@ -15,6 +16,7 @@ import { getSession } from "../../storage/insecure";
 
 export default function WalletScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [userId, setUserId] = useState("u1");
   const [balance, setBalance] = useState(0);
   const [pending, setPending] = useState(0);
@@ -30,6 +32,10 @@ export default function WalletScreen() {
   const [referralCode, setReferralCode] = useState("");
   const [referralMessage, setReferralMessage] = useState("");
   const [referralLoading, setReferralLoading] = useState(false);
+
+  // 3-button mode: add extra bottom padding for tab bar
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 25 : 30;
 
   const loadWallet = useCallback(async (nextUserId = userId) => {
     setLoading(true);
@@ -174,7 +180,7 @@ export default function WalletScreen() {
   }
 
   return (
-    <View style={styles.page}>
+    <KeyboardAvoidingView behavior="padding" style={styles.page}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons color="#fff" name="arrow-back" size={22} />
@@ -313,8 +319,9 @@ export default function WalletScreen() {
         <TouchableOpacity onPress={() => router.push("/checkout")} style={styles.secondaryCta}>
           <Text style={styles.secondaryCtaText}>Go To Checkout</Text>
         </TouchableOpacity>
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Keyboard, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { getSellerWallet, withdrawSellerWallet } from "../../api/seller";
@@ -11,6 +12,9 @@ function money(value) {
 
 export default function SellerWalletScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 45 : 0;
   const [sellerId, setSellerId] = useState("");
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
@@ -19,6 +23,13 @@ export default function SellerWalletScreen() {
   const [message, setMessage] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [amount, setAmount] = useState("");
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", (e) => setKeyboardHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   async function loadWallet(nextSellerId) {
     setLoading(true);
@@ -80,7 +91,8 @@ export default function SellerWalletScreen() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <View style={{ flex: 1, paddingBottom: keyboardHeight }}>
+    <ScrollView style={styles.page} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <View style={styles.header}>
         <Text style={styles.title}>Seller Wallet</Text>
         <Text style={styles.subtitle}>Withdraw available earnings to VulnBank.</Text>
@@ -123,7 +135,9 @@ export default function SellerWalletScreen() {
       <TouchableOpacity onPress={() => router.push("/seller/products")} style={styles.secondaryCta}>
         <Text style={styles.secondaryCtaText}>Manage Products</Text>
       </TouchableOpacity>
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
+    </View>
   );
 }
 

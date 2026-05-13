@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { savePushToken, getPushNotifications } from "../../api/notifications";
@@ -24,6 +25,9 @@ async function saveNotifPrefs(prefs) {
 
 export default function NotificationSettingsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 25 : 0;
   const [user, setUser] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [pushEnabled, setPushEnabled] = React.useState(false);
@@ -193,6 +197,7 @@ export default function NotificationSettingsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.cta}>
           <Text style={styles.ctaText}>Back</Text>
         </TouchableOpacity>
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
     </View>
   );

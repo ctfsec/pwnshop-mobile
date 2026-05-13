@@ -1,9 +1,10 @@
 import React from "react";
 import { useRouter } from "expo-router";
 import {
-  ActivityIndicator, Alert, ScrollView, Share, StyleSheet,
+  ActivityIndicator, Alert, Clipboard, ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity, View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
 import { COLORS } from "../../constants/colors";
@@ -48,6 +49,9 @@ function ActionBtn({ icon, label, onPress, danger }) {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 25 : 0;
   const [user, setUser] = React.useState(null);
   const [balance, setBalance] = React.useState(null);
   const [transactions, setTransactions] = React.useState([]);
@@ -214,10 +218,13 @@ export default function ProfileScreen() {
               <Text style={styles.referralCode} numberOfLines={1} ellipsizeMode="middle">{referralCode || "—"}</Text>
               <TouchableOpacity
                 style={styles.copyBtn}
-                onPress={() => Share.share({ message: `Use my PwnShop referral code: ${referralCode}` })}
+                onPress={() => {
+                  Clipboard.setString(referralCode);
+                  Alert.alert("Copied!", "Referral code copied to clipboard.");
+                }}
               >
-                <Ionicons name="share-social-outline" size={16} color={COLORS.primary} />
-                <Text style={styles.copyBtnText}>Share</Text>
+                <Ionicons name="copy-outline" size={16} color={COLORS.primary} />
+                <Text style={styles.copyBtnText}>Copy</Text>
               </TouchableOpacity>
             </View>
             <Text style={styles.cardHint}>Both you and the new user get a ₦2,500 bonus on first redemption.</Text>
@@ -339,7 +346,7 @@ export default function ProfileScreen() {
           <Text style={styles.logoutText}>Log Out</Text>
         </TouchableOpacity>
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 32 + bottomPadding }} />
       </ScrollView>
     </View>
   );

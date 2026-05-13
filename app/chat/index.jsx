@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef, useState } from "react";
-import { FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { FlatList, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { COLORS } from "../../constants/colors";
 import { sendChatMessage } from "../../api/chat";
@@ -61,15 +62,24 @@ function HtmlBubble({ html }) {
 }
 
 export default function ChatScreen() {
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState(SEED_MESSAGES);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [sessionUser, setSessionUser] = useState(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const listRef = useRef(null);
+
 
   useEffect(() => {
     listRef.current?.scrollToEnd?.({ animated: true });
   }, [messages]);
+
+  useEffect(() => {
+    const show = Keyboard.addListener("keyboardDidShow", (e) => setKeyboardHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener("keyboardDidHide", () => setKeyboardHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -137,76 +147,79 @@ export default function ChatScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.page}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Pwnshop Assist</Text>
-        <Text style={styles.subtitle}>Ask anything about products, deals, or your orders.</Text>
-      </View>
+    <View style={styles.page}>
+      <View style={{ flex: 1, paddingBottom: keyboardHeight }}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Pwnshop Assist</Text>
+          <Text style={styles.subtitle}>Ask anything about products, deals, or your orders.</Text>
+        </View>
 
-      <View style={styles.contextRow}>
-        <View style={styles.contextPill}><Text style={styles.contextText}>Deals context</Text></View>
-        <View style={styles.contextPill}><Text style={styles.contextText}>Cart context</Text></View>
-        <View style={styles.contextPill}><Text style={styles.contextText}>Seller context</Text></View>
-      </View>
+        <View style={styles.contextRow}>
+          <View style={styles.contextPill}><Text style={styles.contextText}>Deals context</Text></View>
+          <View style={styles.contextPill}><Text style={styles.contextText}>Cart context</Text></View>
+          <View style={styles.contextPill}><Text style={styles.contextText}>Seller context</Text></View>
+        </View>
 
-      <View style={styles.quickWrap}>
-        {QUICK_PROMPTS.map((item) => (
-          <TouchableOpacity key={item} onPress={() => submitMessage(item)} style={styles.quickChip}>
-            <Text style={styles.quickChipText}>{item}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+        <View style={styles.quickWrap}>
+          {QUICK_PROMPTS.map((item) => (
+            <TouchableOpacity key={item} onPress={() => submitMessage(item)} style={styles.quickChip}>
+              <Text style={styles.quickChipText}>{item}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      <FlatList
-        ref={listRef}
-        style={styles.messageListContainer}
-        contentContainerStyle={styles.messageList}
-        data={messages}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag"
-        keyExtractor={(item) => item.id}
-        onContentSizeChange={() => listRef.current?.scrollToEnd?.({ animated: true })}
-        renderItem={({ item }) => {
-          const isAssistant = item.role === "assistant";
-          const useWebView = isAssistant && !item.pending && item.html;
-          return (
-            <View style={[
-              styles.messageBubble,
-              isAssistant ? styles.assistantBubble : styles.userBubble,
-              useWebView && styles.assistantBubbleWebView,
-            ]}>
-              {useWebView ? (
-                <HtmlBubble html={item.html} />
-              ) : (
-                <Text style={[
-                  styles.messageText,
-                  isAssistant ? styles.assistantText : styles.userText,
-                  item.pending && styles.pendingText,
-                ]}>
-                  {item.content}
-                </Text>
-              )}
-            </View>
-          );
-        }}
-      />
-
-      <View style={styles.composer}>
-        <TextInput
-          placeholder="Ask Pwnshop Assist..."
-          placeholderTextColor={COLORS.muted}
-          style={styles.input}
-          value={input}
-          onChangeText={setInput}
-          onSubmitEditing={() => submitMessage()}
-          returnKeyType="send"
+        <FlatList
+          ref={listRef}
+          style={styles.messageListContainer}
+          contentContainerStyle={styles.messageList}
+          data={messages}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          keyExtractor={(item) => item.id}
+          onContentSizeChange={() => listRef.current?.scrollToEnd?.({ animated: true })}
+          ListFooterComponent={<View style={{ height: 8 }} />}
+          renderItem={({ item }) => {
+            const isAssistant = item.role === "assistant";
+            const useWebView = isAssistant && !item.pending && item.html;
+            return (
+              <View style={[
+                styles.messageBubble,
+                isAssistant ? styles.assistantBubble : styles.userBubble,
+                useWebView && styles.assistantBubbleWebView,
+              ]}>
+                {useWebView ? (
+                  <HtmlBubble html={item.html} />
+                ) : (
+                  <Text style={[
+                    styles.messageText,
+                    isAssistant ? styles.assistantText : styles.userText,
+                    item.pending && styles.pendingText,
+                  ]}>
+                    {item.content}
+                  </Text>
+                )}
+              </View>
+            );
+          }}
         />
-        <TouchableOpacity disabled={sending} onPress={() => submitMessage()} style={styles.sendButton}>
-          <Ionicons color="#fff" name="send" size={16} />
-        </TouchableOpacity>
-      </View>
 
-    </KeyboardAvoidingView>
+        <View style={styles.composer}>
+          <TextInput
+            placeholder="Ask Pwnshop Assist..."
+            placeholderTextColor={COLORS.muted}
+            style={styles.input}
+            value={input}
+            onChangeText={setInput}
+            onSubmitEditing={() => submitMessage()}
+            returnKeyType="send"
+          />
+          <TouchableOpacity disabled={sending} onPress={() => submitMessage()} style={styles.sendButton}>
+            <Ionicons color="#fff" name="send" size={16} />
+          </TouchableOpacity>
+        </View>
+      </View>
+      {insets.bottom > 0 && <View style={{ backgroundColor: COLORS.card, height: insets.bottom }} />}
+    </View>
   );
 }
 

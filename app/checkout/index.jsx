@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { createOrder } from "../../api/orders";
 import { useCart } from "../context/CartContext";
@@ -18,6 +19,7 @@ import { STORES } from "../../constants/stores";
 export default function CheckoutScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
   const { items, clearCart } = useCart();
   const [userId, setUserId] = useState("u1");
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,10 @@ export default function CheckoutScreen() {
   const [vulnBankCardNumber, setVulnBankCardNumber] = useState("");
   const [vulnBankExpiry, setVulnBankExpiry] = useState("");
   const [vulnBankCvv, setVulnBankCvv] = useState("");
+
+  // 3-button mode: add extra bottom padding for tab bar
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 52 : 0;
 
   useEffect(() => {
     let mounted = true;
@@ -187,7 +193,7 @@ export default function CheckoutScreen() {
   }
 
   return (
-    <View style={styles.page}>
+    <KeyboardAvoidingView behavior="padding" style={styles.page}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons color="#fff" name="arrow-back" size={22} />
@@ -395,8 +401,9 @@ export default function CheckoutScreen() {
         <TouchableOpacity onPress={() => router.push("/(tabs)")} style={styles.linkBtn}>
           <Text style={styles.linkText}>Return Home</Text>
         </TouchableOpacity>
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

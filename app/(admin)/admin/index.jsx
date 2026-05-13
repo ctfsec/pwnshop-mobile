@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../../constants/colors";
 import { getAdminDashboard, resetAdminLab } from "../../../api/admin";
 
@@ -25,6 +26,9 @@ function money(value) {
 
 export default function AdminDashboardScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busyReset, setBusyReset] = useState(false);
@@ -63,7 +67,7 @@ export default function AdminDashboardScreen() {
   const stats = dashboard?.stats || {};
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingBottom: 30 + bottomPadding }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Admin Dashboard</Text>
         <Text style={styles.subtitle}>Revenue, platform stats, and lab controls.</Text>
@@ -108,7 +112,7 @@ function SummaryCard({ label, value }) {
 
 const styles = StyleSheet.create({
   page: { backgroundColor: COLORS.background, flex: 1 },
-  content: { padding: 16, paddingBottom: 30, paddingTop: 54 },
+  content: { padding: 16, paddingTop: 54 },
   header: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16 },
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 28, fontWeight: "700" },
   subtitle: { color: "#ECE0F8", marginTop: 6 },

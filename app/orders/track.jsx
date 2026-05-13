@@ -2,6 +2,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getOrders } from "../../api/orders";
 import { getSession } from "../../storage/insecure";
@@ -29,9 +30,14 @@ function getOrderPrimaryItem(order) {
 
 export default function TrackOrdersScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [orders, setOrders] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
+
+  // 3-button mode: add extra bottom padding for tab bar
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 25 : 16;
 
   React.useEffect(() => {
     let mounted = true;
@@ -99,6 +105,7 @@ export default function TrackOrdersScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { getSellerSales, releaseSellerSale } from "../../api/seller";
@@ -11,6 +12,9 @@ function money(value) {
 
 export default function SellerSalesScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 45 : 0;
   const [sellerId, setSellerId] = useState("");
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +96,7 @@ export default function SellerSalesScreen() {
       <TouchableOpacity onPress={() => router.push("/seller/wallet")} style={styles.secondaryCta}>
         <Text style={styles.secondaryCtaText}>Open Earnings Wallet</Text>
       </TouchableOpacity>
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
   );
 }

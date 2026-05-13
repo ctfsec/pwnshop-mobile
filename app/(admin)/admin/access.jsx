@@ -42,7 +42,7 @@ export default function AdminAccessScreen() {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.page}>
+    <KeyboardAvoidingView behavior="padding" style={styles.page}>
       <View style={styles.hero}>
         <View style={styles.logoWrap}>
           <Ionicons name="shield-checkmark" size={38} color="#fff" />

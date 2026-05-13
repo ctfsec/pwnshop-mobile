@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../../constants/colors";
 import { broadcastAdminNotification, getAdminNotifications, sendAdminNotification } from "../../../api/admin";
@@ -9,6 +10,9 @@ function ts(iso) {
 }
 
 export default function AdminNotificationsScreen() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -55,7 +59,8 @@ export default function AdminNotificationsScreen() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingBottom: 30 + bottomPadding }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Notification Management</Text>
         <Text style={styles.subtitle}>Send push notifications to individual users or broadcast to all.</Text>
@@ -134,12 +139,13 @@ export default function AdminNotificationsScreen() {
         ))
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   page: { backgroundColor: COLORS.background, flex: 1 },
-  content: { padding: 16, paddingBottom: 40, paddingTop: 54 },
+  content: { padding: 16,  paddingTop: 54 },
   header: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16 },
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 24, fontWeight: "700" },
   subtitle: { color: "#ECE0F8", fontSize: 12, marginTop: 5, lineHeight: 17 },

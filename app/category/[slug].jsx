@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { FlatList, ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getProducts, searchProducts } from "../../api/products";
-import { addToWishlist } from "../../api/wishlist";
+import { addToWishlist, getWishlist, removeFromWishlist } from "../../api/wishlist";
 import { COLORS } from "../../constants/colors";
 import { MEDIA } from "../../constants/media";
 import { CONFIG } from "../../api/config";
@@ -60,12 +61,21 @@ function FlashBadge({ endsAt }) {
   );
 }
 
-function ProductCard({ item, onChoose }) {
-  const [wished, setWished] = useState(false);
+function ProductCard({ item, onChoose, isWished }) {
+  const [wished, setWished] = useState(isWished);
+
+  useEffect(() => {
+    setWished(isWished);
+  }, [isWished]);
 
   async function handleWishlist() {
-    const res = await addToWishlist(item.id);
-    if (res.ok) setWished(true);
+    if (wished) {
+      const res = await removeFromWishlist(item.id);
+      if (res.ok) setWished(false);
+    } else {
+      const res = await addToWishlist(item.id);
+      if (res.ok) setWished(true);
+    }
   }
 
   return (
@@ -98,6 +108,9 @@ function ProductCard({ item, onChoose }) {
 
 export default function CategoryScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const { slug, search } = useLocalSearchParams();
   const label = String(slug || "fashion").replace(/-/g, " ");
   const FILTER_CYCLE = ["all", "Fashion", "Electronics", "Phones & Tablets", "Computers & Accessories", "Home & Kitchen", "Beauty & Health"];
@@ -106,6 +119,7 @@ export default function CategoryScreen() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(String(search || ""));
+  const [wishlistIds, setWishlistIds] = useState(new Set());
 
   const onChooseOptions = (id) => {
     router.push(`/product/${id}`);
@@ -204,6 +218,15 @@ export default function CategoryScreen() {
     setSearchTerm(String(search || ""));
   }, [search]);
 
+  useFocusEffect(
+    useCallback(() => {
+      getWishlist().then((res) => {
+        const ids = new Set((res.data || []).map((item) => item.productId));
+        setWishlistIds(ids);
+      });
+    }, [])
+  );
+
   const filteredAndSorted = useMemo(() => {
     let data = [...products];
 
@@ -273,8 +296,10 @@ export default function CategoryScreen() {
       </View>
 
       <View style={styles.filterRow}>
-        <TouchableOpacity onPress={cycleFilter} style={styles.filterBtn}><Text style={styles.filterText}>Filter: {filterMode === "all" ? "All" : filterMode}</Text></TouchableOpacity>
-        <TouchableOpacity onPress={cycleSort} style={styles.filterBtn}><Text style={styles.filterText}>Sort: {sortMode === "default" ? "Default" : sortMode === "price-asc" ? "Price Low" : sortMode === "price-desc" ? "Price High" : "Top Rated"}</Text></TouchableOpacity>
+        {slug === "browse-all" && (
+          <TouchableOpacity onPress={cycleFilter} style={styles.filterBtn}><Text style={styles.filterText}>Filter: {filterMode === "all" ? "All" : filterMode}</Text></TouchableOpacity>
+        )}
+        <TouchableOpacity onPress={cycleSort} style={[styles.filterBtn, slug !== "browse-all" && { flex: 1 }]}><Text style={styles.filterText}>Sort: {sortMode === "default" ? "Default" : sortMode === "price-asc" ? "Price Low" : sortMode === "price-desc" ? "Price High" : "Top Rated"}</Text></TouchableOpacity>
       </View>
 
       <View style={styles.banner}>
@@ -289,7 +314,8 @@ export default function CategoryScreen() {
         data={filteredAndSorted}
         keyExtractor={(item) => item.id}
         numColumns={2}
-        renderItem={({ item }) => <ProductCard item={item} onChoose={onChooseOptions} />}
+        renderItem={({ item }) => <ProductCard item={item} onChoose={onChooseOptions} isWished={wishlistIds.has(item.id)} />}
+        ListFooterComponent={<View style={{ height: bottomPadding }} />}
       />
     </View>
   );

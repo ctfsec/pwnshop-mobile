@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../../constants/colors";
 import { getAdminSecurityLogs } from "../../../api/admin";
@@ -18,6 +19,9 @@ function ts(iso) {
 }
 
 export default function AdminSecurityLogsScreen() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -37,7 +41,7 @@ export default function AdminSecurityLogsScreen() {
   useEffect(() => { load(); }, []);
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingBottom: 30 + bottomPadding }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Security Logs</Text>
         <Text style={styles.subtitle}>Failed logins, bans, and suspicious events.</Text>
@@ -86,7 +90,7 @@ export default function AdminSecurityLogsScreen() {
 
 const styles = StyleSheet.create({
   page: { backgroundColor: COLORS.background, flex: 1 },
-  content: { padding: 16, paddingBottom: 40, paddingTop: 54 },
+  content: { padding: 16,  paddingTop: 54 },
   header: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16 },
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 26, fontWeight: "700" },
   subtitle: { color: "#ECE0F8", marginTop: 5 },

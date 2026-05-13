@@ -2,9 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession, saveSession } from "../../storage/insecure";
 import { CONFIG } from "../../api/config";
+import { updateSellerProfile } from "../../api/seller";
 
 function msToCountdown(ms) {
   if (ms <= 0) return "any moment now";
@@ -14,6 +16,9 @@ function msToCountdown(ms) {
 
 export default function SellerApplyScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 45 : 0;
   const [step, setStep] = useState("loading");
   const [application, setApplication] = useState(null);
   const [checking, setChecking] = useState(false);
@@ -34,7 +39,14 @@ export default function SellerApplyScreen() {
         const json = await res.json();
         if (!mounted) return;
         if (json.data?.role === "seller") {
-          await saveSession({ user: json.data.user });
+          const pendingPhone = user?.pendingContactPhone;
+          const pendingAddress = user?.pendingContactAddress;
+          const newUser = json.data.user;
+          await saveSession({ user: { ...newUser, pendingContactPhone: pendingPhone, pendingContactAddress: pendingAddress } });
+          const sellerId = newUser.sellerId;
+          if (sellerId && (pendingPhone || pendingAddress)) {
+            await updateSellerProfile({ sellerId, contactPhone: pendingPhone || "", contactAddress: pendingAddress || "" }).catch(() => {});
+          }
           setStep("approved");
           return;
         }
@@ -72,7 +84,14 @@ export default function SellerApplyScreen() {
       const res = await fetch(`${CONFIG.BASE_URL}/api/seller/status?userId=${user.id}`);
       const json = await res.json();
       if (json.data?.role === "seller") {
-        await saveSession({ user: json.data.user });
+        const pendingPhone = user?.pendingContactPhone;
+        const pendingAddress = user?.pendingContactAddress;
+        const newUser = json.data.user;
+        await saveSession({ user: { ...newUser, pendingContactPhone: pendingPhone, pendingContactAddress: pendingAddress } });
+        const sellerId = newUser.sellerId;
+        if (sellerId && (pendingPhone || pendingAddress)) {
+          await updateSellerProfile({ sellerId, contactPhone: pendingPhone || "", contactAddress: pendingAddress || "" }).catch(() => {});
+        }
         setStep("approved");
       } else {
         setCheckMsg("Your application is still under review. Please check back shortly.");
@@ -209,6 +228,7 @@ export default function SellerApplyScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backLink}>
             <Text style={styles.backLinkText}>Back to Home</Text>
           </TouchableOpacity>
+          <View style={{ height: bottomPadding }} />
         </ScrollView>
       </View>
     );

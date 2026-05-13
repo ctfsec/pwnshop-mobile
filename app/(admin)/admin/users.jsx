@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../../constants/colors";
 import { getAdminUsers, updateAdminUser } from "../../../api/admin";
 import { getSession, saveSession } from "../../../storage/insecure";
@@ -9,6 +10,9 @@ const ROLES = ["buyer", "seller", "admin"];
 function money(v) { return `₦${Number(v || 0).toLocaleString()}`; }
 
 export default function AdminUsersScreen() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [users, setUsers] = useState([]);
   const [message, setMessage] = useState("");
   const [topUpAmounts, setTopUpAmounts] = useState({});
@@ -72,7 +76,8 @@ export default function AdminUsersScreen() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingBottom: 30 + bottomPadding }]}>
       <View style={styles.header}>
         <Text style={styles.title}>User Management</Text>
         <Text style={styles.subtitle}>Roles, bans, and shopping wallet top-ups.</Text>
@@ -143,12 +148,13 @@ export default function AdminUsersScreen() {
         );
       })}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   page: { backgroundColor: COLORS.background, flex: 1 },
-  content: { padding: 16, paddingBottom: 30, paddingTop: 54 },
+  content: { padding: 16,  paddingTop: 54 },
   header: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16 },
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 26, fontWeight: "700" },
   subtitle: { color: "#ECE0F8", marginTop: 5 },

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
 import { getOrders } from "../../api/orders";
@@ -16,6 +17,9 @@ function formatDate(value) {
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 52 : 0;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -60,7 +64,7 @@ export default function OrdersScreen() {
         <Text style={styles.title}>Order History</Text>
       </View>
 
-      <View style={styles.body}>
+      <ScrollView contentContainerStyle={styles.body}>
         {loading ? <ActivityIndicator /> : null}
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
@@ -89,7 +93,8 @@ export default function OrdersScreen() {
         <TouchableOpacity onPress={() => router.push("/(tabs)")} style={styles.cta}>
           <Text style={styles.ctaText}>Continue Shopping</Text>
         </TouchableOpacity>
-      </View>
+        <View style={{ height: bottomPadding }} />
+      </ScrollView>
     </View>
   );
 }

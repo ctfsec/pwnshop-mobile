@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
@@ -20,6 +21,9 @@ function StatCard({ icon, iconColor, label, value }) {
 }
 
 export default function SellerAnalyticsScreen() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 45 : 0;
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -102,6 +106,7 @@ export default function SellerAnalyticsScreen() {
           <Text style={styles.emptyMeta}>Revenue charts will appear here once you have completed orders.</Text>
         </View>
       )}
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
   );
 }

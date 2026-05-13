@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { CONFIG } from "../../api/config";
@@ -28,6 +29,9 @@ function StatusBadge({ status }) {
 
 export default function PendingItemsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 25 : 0;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
@@ -114,6 +118,7 @@ export default function PendingItemsScreen() {
               </View>
             </View>
           ))}
+          <View style={{ height: bottomPadding }} />
         </ScrollView>
       )}
     </View>

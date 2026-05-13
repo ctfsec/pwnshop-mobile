@@ -1,6 +1,7 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useState, useEffect } from "react";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import Wordmark from "../../components/ui/wordmark";
 import { register as registerRequest } from "../../api/auth";
@@ -10,6 +11,16 @@ const GENDERS = ["Male", "Female", "Other"];
 
 function isValidEmail(val) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((val || "").trim());
+}
+
+function isValidPhone(val) {
+  const digits = val.replace(/[^0-9]/g, "");
+  // International format: + followed by 7–15 digits (E.164)
+  if (val.startsWith("+")) return digits.length >= 7 && digits.length <= 15;
+  // Nigerian local format: 0XXXXXXXXXX (11 digits, prefix 07/08/09)
+  if (val.startsWith("0")) return /^0[789][0-1][0-9]{8}$/.test(val);
+  // Bare international digits without +: 7–15 digits
+  return digits.length >= 7 && digits.length <= 15;
 }
 
 function isValidDob(val) {
@@ -30,6 +41,9 @@ function FieldLabel({ text }) {
 }
 
 export default function Register() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -87,8 +101,8 @@ export default function Register() {
       setError("Please enter a valid email address (e.g. you@example.com)");
       return;
     }
-    if (phone.trim() && phone.replace(/[^0-9]/g, "").length < 10) {
-      setError("Phone number must be at least 10 digits");
+    if (phone.trim() && !isValidPhone(phone.trim())) {
+      setError("Enter a valid phone number (e.g. 08012345678 or +447911123456)");
       return;
     }
     if (dob.trim()) {
@@ -152,7 +166,8 @@ export default function Register() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView style={styles.page} contentContainerStyle={[styles.container, { paddingBottom: 40 + bottomPadding }]} keyboardShouldPersistTaps="handled">
       <Wordmark />
       <Text style={styles.title}>Create An Account</Text>
 
@@ -198,13 +213,17 @@ export default function Register() {
 
       <FieldLabel text="Phone Number" />
       <TextInput
-        style={styles.input}
+        style={[styles.input, phone.length >= 10 && !isValidPhone(phone) && styles.inputError]}
         placeholder="e.g. 08012345678"
         placeholderTextColor={COLORS.muted}
         value={phone}
         onChangeText={handlePhoneChange}
         keyboardType="phone-pad"
+        maxLength={16}
       />
+      {phone.length >= 10 && !isValidPhone(phone) && (
+        <Text style={styles.fieldError}>Invalid number - use local format (08012345678) or international (+44...)</Text>
+      )}
 
       <FieldLabel text="Date of Birth" />
       <TextInput
@@ -277,7 +296,8 @@ export default function Register() {
       <TouchableOpacity onPress={() => router.push("/(auth)/login")} style={styles.loginLink}>
         <Text style={styles.loginText}>Already have an account? <Text style={styles.loginHighlight}>Login</Text></Text>
       </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -302,7 +322,7 @@ const styles = StyleSheet.create({
   successTitle: { color: COLORS.text, fontFamily: "Syne_700Bold", fontSize: 28, fontWeight: "700" },
   successSub: { color: COLORS.muted, fontSize: 15, marginTop: 8, textAlign: "center" },
   page: { backgroundColor: COLORS.background, flex: 1 },
-  container: { padding: 24, paddingBottom: 40 },
+  container: { padding: 24, paddingTop: 54 },
   title: {
     color: COLORS.text,
     fontFamily: "Syne_700Bold",

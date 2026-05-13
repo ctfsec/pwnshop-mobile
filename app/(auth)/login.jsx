@@ -1,4 +1,4 @@
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { COLORS } from "../../constants/colors";
@@ -63,7 +63,8 @@ export default function Login() {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Wordmark />
       <Text style={styles.title}>Login</Text>
 
@@ -115,7 +116,8 @@ export default function Login() {
         </View>
       </TouchableOpacity>
 
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

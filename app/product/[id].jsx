@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, KeyboardAvoidingView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import { useCart } from "../context/CartContext";
 import { COLORS } from "../../constants/colors";
 import { MEDIA } from "../../constants/media";
 import { addProductReview, getProductById } from "../../api/products";
-import { addToWishlist, removeFromWishlist } from "../../api/wishlist";
+import { addToWishlist, getWishlist, removeFromWishlist } from "../../api/wishlist";
 import { getSession } from "../../storage/insecure";
 
 const MEDIA_MAP = {
@@ -109,6 +111,9 @@ function getProductImage(productData) {
 
 export default function ProductDetailsScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 52 : 0;
   const { id } = useLocalSearchParams();
   const [product, setProduct] = React.useState(null);
   const { addToCart } = useCart();
@@ -125,27 +130,35 @@ export default function ProductDetailsScreen() {
 
   React.useEffect(() => {
     let mounted = true;
-    async function load() {
-      const { user: storedUser } = await getSession();
-      if (mounted) {
-        setUser(storedUser);
-      }
-
-      try {
-        const res = await getProductById(id || "p1");
-        if (mounted && res && res.data) {
-          setProduct(res.data);
-          setReviews(Array.isArray(res.data.reviews) ? res.data.reviews : []);
-        }
-      } catch (e) {
-        // fallback to a minimal object
-        setProduct({ id: id || "p1", name: "Unknown Product", priceNaira: 0, code: "-", brand: "-", colors: ["Default"], sizes: ["Standard"] });
-        setReviews([]);
-      }
-    }
-    load();
+    getSession().then(({ user: storedUser }) => { if (mounted) setUser(storedUser); });
     return () => (mounted = false);
-  }, [id]);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      async function load() {
+        try {
+          const productRes = await getProductById(id || "p1");
+          if (mounted && productRes && productRes.data) {
+            setProduct(productRes.data);
+            setReviews(Array.isArray(productRes.data.reviews) ? productRes.data.reviews : []);
+          }
+        } catch {
+          setProduct({ id: id || "p1", name: "Unknown Product", priceNaira: 0, code: "-", brand: "-", colors: ["Default"], sizes: ["Standard"] });
+          setReviews([]);
+        }
+        getWishlist().then((wishlistRes) => {
+          if (mounted) {
+            const items = wishlistRes.data || [];
+            setInWishlist(items.some((item) => item.productId === (id || "p1")));
+          }
+        });
+      }
+      load();
+      return () => { mounted = false; };
+    }, [id])
+  );
 
   function formatNaira(n) {
     if (typeof n !== "number") return String(n);
@@ -223,7 +236,7 @@ export default function ProductDetailsScreen() {
   }
 
   return (
-    <View style={styles.page}>
+    <KeyboardAvoidingView behavior="padding" style={styles.page}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons color="#fff" name="arrow-back" size={22} />
@@ -231,7 +244,7 @@ export default function ProductDetailsScreen() {
         <Text style={styles.title}>Choose Options</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.body} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <Image source={getProductImage(product)} style={styles.image} resizeMode="cover" />
         <Text style={styles.name}>{product ? product.name : "Loading..."}</Text>
         <Text style={styles.meta}>Product Code: <Text style={{ color: COLORS.primary }}>{product ? product.code : "-"}</Text></Text>
@@ -321,7 +334,7 @@ export default function ProductDetailsScreen() {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Return Policy</Text>
-          <Text style={styles.cardText}>Guaranteed 7-Day Return Policy. For details about return shipping options, please visit the Konga Return Policy.</Text>
+          <Text style={styles.cardText}>Guaranteed 7-Day Return Policy. For details about return shipping options, please visit the Pwnshop Return Policy.</Text>
         </View>
 
         <View style={styles.card}>
@@ -387,7 +400,11 @@ export default function ProductDetailsScreen() {
             <View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={styles.sellerAvatar}>
-                  <Text style={{ color: '#fff', fontWeight: '700' }}>{product.sellerInfo.name.charAt(0).toUpperCase()}</Text>
+                  {product.sellerInfo.logo ? (
+                    <Image source={{ uri: product.sellerInfo.logo }} style={{ width: 44, height: 44, borderRadius: 22 }} resizeMode="cover" />
+                  ) : (
+                    <Text style={{ color: '#fff', fontWeight: '700' }}>{product.sellerInfo.name.charAt(0).toUpperCase()}</Text>
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
@@ -426,8 +443,9 @@ export default function ProductDetailsScreen() {
             </View>
           )}
         </View>
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -561,7 +579,7 @@ const styles = StyleSheet.create({
   reviewMeta: { color: COLORS.muted, fontSize: 12, fontWeight: "600", marginBottom: 8 },
   reviewWebWrap: { height: 120, overflow: "hidden", borderRadius: 8 },
   reviewWebView: { backgroundColor: "transparent", height: 120 },
-  sellerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  sellerAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: COLORS.primary, alignItems: 'center', justifyContent: 'center', marginRight: 10, overflow: 'hidden' },
   visitStoreBtn: { alignItems: 'center', borderColor: COLORS.primary, borderRadius: 8, borderWidth: 1, flexDirection: 'row', gap: 6, justifyContent: 'center', marginTop: 12, paddingVertical: 10 },
   visitStoreText: { color: COLORS.primary, fontSize: 13, fontWeight: '700' },
 });

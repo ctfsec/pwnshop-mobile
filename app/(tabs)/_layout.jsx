@@ -4,6 +4,7 @@ import { COLORS } from "../../constants/colors";
 import { View, Text, StyleSheet } from "react-native";
 import { useCallback, useEffect, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getSession } from "../../storage/insecure";
 import { useCart } from "../context/CartContext";
 
@@ -21,8 +22,12 @@ function CartBadge() {
 }
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
   const [role, setRole] = useState("buyer");
   const [enrollmentStatus, setEnrollmentStatus] = useState("unapproved");
+
+  // Detect 3-button mode: insets.bottom < 30 = gesture, >= 30 = 3-button
+  const is3ButtonMode = insets.bottom >= 30;
 
   useEffect(() => {
     let mounted = true;
@@ -61,16 +66,23 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.muted,
+        tabBarItemStyle: {
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+        },
         tabBarStyle: {
           backgroundColor: COLORS.card,
           borderTopColor: COLORS.borderGray,
-          height: 66,
-          paddingBottom: 8,
+          borderTopWidth: 1,
+          height: is3ButtonMode ? 96 : 72,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: "700",
+          marginTop: 4,
         },
       }}
     >

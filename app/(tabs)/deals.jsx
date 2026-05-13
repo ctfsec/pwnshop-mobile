@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getProducts } from "../../api/products";
 import { MEDIA } from "../../constants/media";
@@ -147,6 +148,9 @@ function DealCard({ item, onPress }) {
 
 export default function DealsTab() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 30;
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -190,7 +194,7 @@ export default function DealsTab() {
         <FlatList
           data={deals}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, { paddingBottom: bottomPadding }]}
           renderItem={({ item }) => (
             <DealCard item={item} onPress={(id) => router.push(`/product/${id}`)} />
           )}
@@ -205,7 +209,7 @@ const styles = StyleSheet.create({
   header: { backgroundColor: COLORS.primary, paddingBottom: 20, paddingHorizontal: 16, paddingTop: 54 },
   headerTitle: { color: "#fff", fontSize: 26, fontFamily: "Syne_700Bold", fontWeight: "700" },
   headerSub: { color: "#ECE0F8", fontSize: 12, marginTop: 4, lineHeight: 18 },
-  list: { padding: 16, paddingBottom: 30 },
+  list: { padding: 16 },
   empty: { alignItems: "center", flex: 1, justifyContent: "center", padding: 32 },
   emptyTitle: { color: COLORS.text, fontFamily: "Syne_700Bold", fontSize: 18, fontWeight: "700", marginTop: 16, textAlign: "center" },
   emptyText: { color: COLORS.muted, fontSize: 13, lineHeight: 20, marginTop: 8, textAlign: "center" },

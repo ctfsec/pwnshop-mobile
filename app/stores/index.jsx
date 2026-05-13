@@ -1,11 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { STORES } from "../../constants/stores";
 
 export default function StoresScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 25 : 0;
 
   return (
     <ScrollView style={styles.page}>
@@ -57,6 +61,7 @@ export default function StoresScreen() {
           </View>
         ))}
       </View>
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
   );
 }

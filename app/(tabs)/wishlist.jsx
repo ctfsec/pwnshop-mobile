@@ -2,6 +2,7 @@ import React from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { MEDIA } from "../../constants/media";
 import { getSession } from "../../storage/insecure";
@@ -35,6 +36,9 @@ function getItemImage(item) {
 
 export default function WishlistScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 15 : 0;
   const { addToCart } = useCart();
   const [wishlist, setWishlist] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -157,6 +161,7 @@ export default function WishlistScreen() {
             </View>
           </View>
         ))}
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
     </View>
   );
@@ -168,7 +173,7 @@ const styles = StyleSheet.create({
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 22, fontWeight: "700" },
   subtitle: { color: "rgba(255,255,255,0.8)", fontSize: 12, marginTop: 4 },
   list: { flex: 1 },
-  listContent: { padding: 12, paddingBottom: 24 },
+  listContent: { padding: 12 },
   card: { backgroundColor: COLORS.card, borderRadius: 12, marginBottom: 12, overflow: "hidden", flexDirection: "row" },
   image: { width: 100, height: 100, backgroundColor: COLORS.borderGray },
   cardBody: { flex: 1, padding: 12 },

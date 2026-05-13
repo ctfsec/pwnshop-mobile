@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../../constants/colors";
 import { createSellerProduct, getSellerProducts, updateSellerProduct } from "../../../api/seller";
 import { getSession } from "../../../storage/insecure";
@@ -19,9 +20,14 @@ function splitCSV(value) {
 
 export default function SellerProductFormScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const productId = useMemo(() => String(params.id || "new"), [params.id]);
   const isNew = productId === "new";
+
+  // 3-button mode: add extra bottom padding for tab bar
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 45 : 0;
 
   const [sellerId, setSellerId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -171,7 +177,8 @@ export default function SellerProductFormScreen() {
   }
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView style={styles.page} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons color="#fff" name="arrow-back" size={22} />
@@ -242,7 +249,9 @@ export default function SellerProductFormScreen() {
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Save Product</Text>}
         </TouchableOpacity>
       </View>
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

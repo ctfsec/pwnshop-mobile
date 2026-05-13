@@ -2,6 +2,7 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getOrders } from "../../api/orders";
 import { getSession } from "../../storage/insecure";
@@ -27,7 +28,11 @@ function getStageFromElapsed(elapsedMs) {
 
 export default function TrackingScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
+
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 52 : 0;
   const [order, setOrder] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [currentStage, setCurrentStage] = React.useState(1);
@@ -145,6 +150,7 @@ export default function TrackingScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.cta}>
           <Text style={styles.ctaText}>Back to Orders</Text>
         </TouchableOpacity>
+        <View style={{ height: bottomPadding }} />
       </ScrollView>
     </View>
   );

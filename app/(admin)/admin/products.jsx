@@ -1,18 +1,60 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../../constants/colors";
 import { deleteAdminProduct, getAdminProducts, updateAdminProduct } from "../../../api/admin";
 
 function money(v) { return `₦${Number(v || 0).toLocaleString()}`; }
 
+function formatDateInput(raw) {
+  // Strip everything except digits
+  const digits = raw.replace(/\D/g, "").slice(0, 12);
+  let out = "";
+  // YYYY
+  if (digits.length <= 4) {
+    out = digits;
+  // YYYY-MM
+  } else if (digits.length <= 6) {
+    out = digits.slice(0, 4) + "-" + digits.slice(4);
+  // YYYY-MM-DD
+  } else if (digits.length <= 8) {
+    out = digits.slice(0, 4) + "-" + digits.slice(4, 6) + "-" + digits.slice(6);
+  // YYYY-MM-DDTHH
+  } else if (digits.length <= 10) {
+    out = digits.slice(0, 4) + "-" + digits.slice(4, 6) + "-" + digits.slice(6, 8) + "T" + digits.slice(8);
+  // YYYY-MM-DDTHH:MM
+  } else {
+    out = digits.slice(0, 4) + "-" + digits.slice(4, 6) + "-" + digits.slice(6, 8) + "T" + digits.slice(8, 10) + ":" + digits.slice(10);
+  }
+  return out;
+}
+
+function validateFlashSale(price, endsAt) {
+  const p = Number(price);
+  if (!price || isNaN(p) || p <= 0) return "Enter a valid sale price greater than 0.";
+  const dateRe = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d$/;
+  if (!dateRe.test(endsAt)) return "Date must be in format YYYY-MM-DDTHH:MM (e.g. 2026-12-31T23:59).";
+  if (new Date(endsAt) <= new Date()) return "End date must be in the future.";
+  return null;
+}
+
 function FlashModal({ product, onClose, onSave }) {
   const [price, setPrice] = useState(String(product.flashSalePrice || ""));
   const [endsAt, setEndsAt] = useState(product.flashSaleEndsAt || "");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  function handleDateChange(raw) {
+    // Allow backspace: if new input is shorter than current, strip formatting and reformat
+    setError("");
+    setEndsAt(formatDateInput(raw));
+  }
 
   async function save() {
+    const err = validateFlashSale(price, endsAt);
+    if (err) { setError(err); return; }
     setBusy(true);
-    await onSave({ flashSale: true, flashSalePrice: Number(price || 0), flashSaleEndsAt: endsAt });
+    await onSave({ flashSale: true, flashSalePrice: Number(price), flashSaleEndsAt: endsAt });
     setBusy(false);
   }
 
@@ -21,9 +63,25 @@ function FlashModal({ product, onClose, onSave }) {
       <View style={modal.box}>
         <Text style={modal.title}>Flash Sale: {product.name}</Text>
         <Text style={modal.label}>Sale Price (₦)</Text>
-        <TextInput style={modal.input} value={price} onChangeText={setPrice} keyboardType="number-pad" placeholder="0" />
+        <TextInput
+          style={modal.input}
+          value={price}
+          onChangeText={(v) => { setError(""); setPrice(v.replace(/[^0-9.]/g, "")); }}
+          keyboardType="number-pad"
+          placeholder="0"
+          placeholderTextColor="#aaa"
+        />
         <Text style={modal.label}>Ends At (YYYY-MM-DDTHH:MM)</Text>
-        <TextInput style={modal.input} value={endsAt} onChangeText={setEndsAt} placeholder="2026-05-31T23:59" />
+        <TextInput
+          style={modal.input}
+          value={endsAt}
+          onChangeText={handleDateChange}
+          keyboardType="number-pad"
+          placeholder="YYYY-MM-DD T HH:MM"
+          placeholderTextColor="#aaa"
+          maxLength={16}
+        />
+        {error ? <Text style={modal.error}>{error}</Text> : null}
         <View style={modal.btnRow}>
           <TouchableOpacity onPress={onClose} style={modal.cancel}><Text style={modal.cancelText}>Cancel</Text></TouchableOpacity>
           <TouchableOpacity onPress={save} style={modal.save} disabled={busy}>
@@ -36,6 +94,9 @@ function FlashModal({ product, onClose, onSave }) {
 }
 
 export default function AdminProductsScreen() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [products, setProducts] = useState([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState({});
@@ -81,8 +142,8 @@ export default function AdminProductsScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
+      <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingBottom: 30 + bottomPadding }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Product Management</Text>
           <Text style={styles.subtitle}>Feature, flash sale, and remove catalog items.</Text>
@@ -143,13 +204,13 @@ export default function AdminProductsScreen() {
           }}
         />
       )}
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   page: { backgroundColor: COLORS.background, flex: 1 },
-  content: { padding: 16, paddingBottom: 30, paddingTop: 54 },
+  content: { padding: 16,  paddingTop: 54 },
   header: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16 },
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 26, fontWeight: "700" },
   subtitle: { color: "#ECE0F8", marginTop: 5 },
@@ -183,4 +244,5 @@ const modal = StyleSheet.create({
   cancelText: { color: COLORS.muted, fontWeight: "700" },
   save: { alignItems: "center", backgroundColor: "#B07800", borderRadius: 8, flex: 1, paddingVertical: 10 },
   saveText: { color: "#fff", fontWeight: "700" },
+  error: { color: "#B00020", fontSize: 12, fontWeight: "600", marginTop: 8 },
 });

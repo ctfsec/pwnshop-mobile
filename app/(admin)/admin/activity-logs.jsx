@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../../constants/colors";
 import { getAdminActivityLogs } from "../../../api/admin";
 
 export default function AdminActivityLogsScreen() {
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 20 : 0;
   const [logs, setLogs] = useState([]);
   const [message, setMessage] = useState("");
 
@@ -14,7 +18,7 @@ export default function AdminActivityLogsScreen() {
   }, []);
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.page} contentContainerStyle={[styles.content, { paddingBottom: 30 + bottomPadding }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Activity Logs</Text>
         <Text style={styles.subtitle}>System and admin actions timeline.</Text>
@@ -34,7 +38,7 @@ export default function AdminActivityLogsScreen() {
 
 const styles = StyleSheet.create({
   page: { backgroundColor: COLORS.background, flex: 1 },
-  content: { padding: 16, paddingBottom: 30, paddingTop: 54 },
+  content: { padding: 16,  paddingTop: 54 },
   header: { backgroundColor: COLORS.primary, borderRadius: 14, padding: 16 },
   title: { color: "#fff", fontFamily: "Syne_700Bold", fontSize: 26, fontWeight: "700" },
   subtitle: { color: "#ECE0F8", marginTop: 5 },

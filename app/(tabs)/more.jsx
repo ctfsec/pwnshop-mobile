@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { clearSession, getSession } from "../../storage/insecure";
 
@@ -47,8 +48,13 @@ const CATEGORY_SLUG = {
 
 export default function MoreTab() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [role, setRole] = useState(undefined);
   const [userName, setUserName] = useState("");
+
+  // 3-button mode: add extra bottom padding for tab bar
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 96 : 0;
 
   useEffect(() => {
     let mounted = true;
@@ -172,7 +178,7 @@ export default function MoreTab() {
           <Ionicons color="#B00020" name="bug-outline" size={20} />
           <View>
             <Text style={styles.vulnIndexTitle}>Vulnerability Index</Text>
-            <Text style={styles.vulnIndexSub}>45 intentional vulnerabilities</Text>
+            <Text style={styles.vulnIndexSub}>47 intentional vulnerabilities</Text>
           </View>
         </View>
         <Ionicons color={COLORS.muted} name="chevron-forward" size={16} />

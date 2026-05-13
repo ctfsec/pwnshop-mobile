@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../constants/colors";
 import { getSession } from "../../storage/insecure";
 import { getSellerDashboard, releaseSellerSale } from "../../api/seller";
@@ -13,6 +14,9 @@ function money(value) {
 
 export default function SellerTab() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const is3ButtonMode = insets.bottom >= 30;
+  const bottomPadding = is3ButtonMode ? 5 : 0;
   const [user, setUser] = useState(null);
   const [sellerId, setSellerId] = useState("");
   const [dashboard, setDashboard] = useState(null);
@@ -153,6 +157,7 @@ export default function SellerTab() {
       <TouchableOpacity onPress={() => router.push("/category/browse-all")} style={styles.secondaryCta}>
         <Text style={styles.secondaryCtaText}>Go To Storefront</Text>
       </TouchableOpacity>
+      <View style={{ height: bottomPadding }} />
     </ScrollView>
   );
 }

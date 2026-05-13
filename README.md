@@ -28,7 +28,7 @@
 
 ## Overview
 
-PwnShop Mobile is the Android companion to [PwnShop Web](https://github.com/r007sec/pwnshop) - a fully functional e-commerce platform deliberately built with **47 documented security vulnerabilities** spanning OWASP Mobile Top 10 (2024), OWASP LLM Top 10 (2025), and real-world API/business logic flaws.
+PwnShop Mobile is the Android companion to [PwnShop Web](https://github.com/ctfsec/pwnshop-mobile) - a fully functional e-commerce platform deliberately built with **47 documented security vulnerabilities** spanning OWASP Mobile Top 10 (2024), OWASP LLM Top 10 (2025), and real-world API/business logic flaws.
 
 It is designed for:
 - **CTF competitions** - each vulnerability has a unique PWN-ID and difficulty rating
@@ -48,7 +48,7 @@ Unlike generic vulnerable apps, PwnShop Mobile mirrors a real Nigerian e-commerc
 - Real commission calculations, logistics fees, and VAT by product category
 - **Groq API** AI chatbot with 10 LLM-specific vulnerabilities (prompt injection, excessive agency, context leakage)
 - Three distinct user roles - **buyer**, **seller**, **admin** - each with their own attack surface
-- Backend deployed on **Render** (always-on free tier) - no local setup required to attack
+- Backend deployment - no local setup required to attack
 
 ---
 
@@ -92,7 +92,7 @@ Unlike generic vulnerable apps, PwnShop Mobile mirrors a real Nigerian e-commerc
 
 **No setup required.** The backend is already running.
 
-1. Download the latest APK from the [Releases page](https://github.com/r007sec/pwnshop-mobile/releases)
+1. Download the latest APK from the [Releases page](https://github.com/ctfsec/pwnshop-mobile/releases)
 2. Enable **Install from Unknown Sources** on your Android device
 3. Install and launch PwnShop
 
@@ -131,7 +131,7 @@ export const CONFIG = {
 ### Backend (Local)
 
 ```bash
-git clone https://github.com/r007sec/pwnshop-backend.git
+git clone https://github.com/ctfsec/pwnshop-backend.git
 cd pwnshop-backend
 cp .env.example .env   # fill in your values
 npm run dev
